@@ -1,0 +1,34 @@
+# Build
+bin/
+obj/
+out/
+
+# .NET
+*.user
+*.suo
+.vs/
+*.userprefs
+
+# Конфигурация с секретами — не коммитить
+**/appsettings.json
+**/appsettings.*.json
+# Исключение — example-файл коммитим
+!**/appsettings.example.json
+
+# EF Core
+*.db
+*.db-shm
+*.db-wal
+
+# Логи
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Rider / VS Code
+.idea/
+.vscode/
+*.sln.iml

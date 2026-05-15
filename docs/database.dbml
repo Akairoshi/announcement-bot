@@ -1,0 +1,86 @@
+// AnnouncementBot — Database Schema
+// https://dbdiagram.io
+
+Table Users {
+  Id         bigint      [pk, note: "Telegram User ID"]
+  UserName   varchar     [not null]
+  Role       int         [not null, note: "0 = User, 1 = Admin, 2 = SuperAdmin"]
+  JoinAt     timestamp   [not null, default: `now()`]
+}
+
+Table Categories {
+  Id           uuid        [pk, default: `gen_random_uuid()`]
+  Name         varchar     [not null, unique]
+  CreatedById  bigint      [not null, ref: > Users.Id]
+  CreatedAt    timestamp   [not null, default: `now()`]
+}
+
+Table AdminCategoryAccess {
+  AdminId     bigint  [not null, ref: > Users.Id]
+  CategoryId  uuid    [not null, ref: > Categories.Id]
+
+  indexes {
+    (AdminId, CategoryId) [pk]
+  }
+}
+
+Table Subscriptions {
+  UserId        bigint    [not null, ref: > Users.Id]
+  CategoryId    uuid      [not null, ref: > Categories.Id]
+  SubscribedAt  timestamp [not null, default: `now()`]
+
+  indexes {
+    (UserId, CategoryId) [pk]
+  }
+}
+
+Table Templates {
+  Id           uuid       [pk, default: `gen_random_uuid()`]
+  Name         varchar    [not null]
+  Text         text       [not null]
+  CreatedById  bigint     [not null, ref: > Users.Id, note: "Admin ID"]
+  CreatedAt    timestamp  [not null, default: `now()`]
+}
+
+Table Announcements {
+  Id           uuid       [pk, default: `gen_random_uuid()`]
+  Text         text       [not null]
+  CategoryId   uuid       [not null, ref: > Categories.Id]
+  TemplateId   uuid       [null, ref: > Templates.Id]
+  CreatedById  bigint     [not null, ref: > Users.Id]
+  CreatedAt    timestamp  [not null, default: `now()`]
+
+  note: "Автоматически удаляются через 30 дней (CleanerService)"
+}
+
+Table DeliveryStatus {
+  Id               uuid       [pk, default: `gen_random_uuid()`]
+  AnnouncementId   uuid       [not null, ref: > Announcements.Id]
+  UserId           bigint     [not null, ref: > Users.Id]
+  Status           int        [not null, note: "0 = Pending, 1 = Sent, 2 = Failed"]
+  RetryCount       int        [not null, default: 0]
+  LastAttemptAt    timestamp  [null]
+  SentAt           timestamp  [null]
+}
+
+Table AdminRequests {
+  Id            uuid       [pk, default: `gen_random_uuid()`]
+  RequesterId   bigint     [not null, ref: > Users.Id, note: "Кто подаёт заявку"]
+  TargetId      bigint     [null, ref: > Users.Id, note: "На кого направлено (только для Reassignment)"]
+  Type          int        [not null, note: "0 = Appointment, 1 = Reassignment"]
+  Details       text       [null]
+  Status        int        [not null, note: "0 = Pending, 1 = Approved, 2 = Rejected"]
+  CreatedAt     timestamp  [not null, default: `now()`]
+  ReviewedAt    timestamp  [null]
+  ReviewedById  bigint     [null, ref: > Users.Id, note: "Кто обработал заявку"]
+}
+
+Table AuditLog {
+  Id          uuid       [pk, default: `gen_random_uuid()`]
+  UserId      bigint     [not null, ref: > Users.Id]
+  Action      varchar    [not null, note: "Например: CategoryCreated, AdminAppointed"]
+  EntityName  varchar    [not null, note: "Например: Category, Template"]
+  EntityId    varchar    [not null]
+  Details     text       [null]
+  CreatedAt   timestamp  [not null, default: `now()`]
+}

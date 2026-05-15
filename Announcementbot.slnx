@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="src/AnnouncementBot.Domain/AnnouncementBot.Domain.csproj" />
+  <Project Path="src/AnnouncementBot.Application/AnnouncementBot.Application.csproj" />
+  <Project Path="src/AnnouncementBot.Infrastructure/AnnouncementBot.Infrastructure.csproj" />
+  <Project Path="src/AnnouncementBot.Presentation/AnnouncementBot.Presentation.csproj" />
+</Solution>
