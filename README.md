@@ -1,2 +1,5 @@
 # Announcement bot
-***Announcement bot in development ;_***
+***В разработке***
+### Доки:
+- [specifications.md](docs/specification.md)
+- [database.md](docs/database.md)
