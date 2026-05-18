@@ -7,8 +7,9 @@ using Microsoft.Extensions.Hosting;
 using Telegram.Bot;
 
 var host = Host.CreateDefaultBuilder(args)
-    .ConfigureServices((context, services) => {
-        
+    .ConfigureServices((context, services) =>
+    {
+
         var botToken = context.Configuration
         .GetSection(BotConfiguration.SectionName)
         .Get<BotConfiguration>()!

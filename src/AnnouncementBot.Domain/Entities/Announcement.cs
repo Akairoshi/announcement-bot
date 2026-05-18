@@ -11,6 +11,9 @@
 
         private Announcement() { }
 
+        private readonly List<DeliveryStatus> _deliveryStatuses = [];
+        public IReadOnlyCollection<DeliveryStatus> DeliveryStatuses => _deliveryStatuses.AsReadOnly();
+
         public Announcement(string text, Guid categoryId, 
             long createdById ,Guid? templateId)
         {

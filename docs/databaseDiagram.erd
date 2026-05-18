@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<diagram version="1" name="databaseDiagram.erd">
+	<entities>
+		<data-source id="postgres-jdbc-19e1be53bfa-4bc1cb6d77c49828">
+			<entity id="1" name="AdminCategoryAccesses" fq-name="public.&quot;AdminCategoryAccesses&quot;" order="0" x="584" y="723">
+				<path name="public"/>
+				<path name="AnnouncementBot"/>
+			</entity>
+			<entity id="2" name="AdminRequests" fq-name="public.&quot;AdminRequests&quot;" order="1" x="837" y="291">
+				<path name="public"/>
+				<path name="AnnouncementBot"/>
+			</entity>
+			<entity id="3" name="Announcements" fq-name="public.&quot;Announcements&quot;" order="2" x="317" y="276">
+				<path name="public"/>
+				<path name="AnnouncementBot"/>
+			</entity>
+			<entity id="4" name="AuditLogs" fq-name="public.&quot;AuditLogs&quot;" order="3" x="842" y="529">
+				<path name="public"/>
+				<path name="AnnouncementBot"/>
+			</entity>
+			<entity id="5" name="Categories" fq-name="public.&quot;Categories&quot;" order="4" x="703" y="565">
+				<path name="public"/>
+				<path name="AnnouncementBot"/>
+			</entity>
+			<entity id="6" name="DeliveryStatuses" fq-name="public.&quot;DeliveryStatuses&quot;" order="5" x="306" y="478">
+				<path name="public"/>
+				<path name="AnnouncementBot"/>
+			</entity>
+			<entity id="7" name="Subscriptions" fq-name="public.&quot;Subscriptions&quot;" order="6" x="494" y="574">
+				<path name="public"/>
+				<path name="AnnouncementBot"/>
+			</entity>
+			<entity id="8" name="Templates" fq-name="public.&quot;Templates&quot;" order="7" x="483" y="162">
+				<path name="public"/>
+				<path name="AnnouncementBot"/>
+			</entity>
+			<entity id="9" name="Users" fq-name="public.&quot;Users&quot;" order="8" x="618" y="344">
+				<path name="public"/>
+				<path name="AnnouncementBot"/>
+			</entity>
+		</data-source>
+	</entities>
+	<relations>
+		<relation name="FK_DeliveryStatuses_Announcements_AnnouncementId" fq-name="public.&quot;DeliveryStatuses&quot;.&quot;FK_DeliveryStatuses_Announcements_AnnouncementId&quot;" type="fk" pk-ref="3" fk-ref="6"/>
+		<relation name="FK_AdminCategoryAccesses_Categories_CategoryId" fq-name="public.&quot;AdminCategoryAccesses&quot;.&quot;FK_AdminCategoryAccesses_Categories_CategoryId&quot;" type="fk" pk-ref="5" fk-ref="1">
+			<bend type="abs" x="710" y="730"/>
+		</relation>
+		<relation name="FK_Announcements_Categories_CategoryId" fq-name="public.&quot;Announcements&quot;.&quot;FK_Announcements_Categories_CategoryId&quot;" type="fk" pk-ref="5" fk-ref="3"/>
+		<relation name="FK_Subscriptions_Categories_CategoryId" fq-name="public.&quot;Subscriptions&quot;.&quot;FK_Subscriptions_Categories_CategoryId&quot;" type="fk" pk-ref="5" fk-ref="7"/>
+		<relation name="FK_Announcements_Templates_TemplateId" fq-name="public.&quot;Announcements&quot;.&quot;FK_Announcements_Templates_TemplateId&quot;" type="fk" pk-ref="8" fk-ref="3"/>
+		<relation name="FK_AdminCategoryAccesses_Users_AdminId" fq-name="public.&quot;AdminCategoryAccesses&quot;.&quot;FK_AdminCategoryAccesses_Users_AdminId&quot;" type="fk" pk-ref="9" fk-ref="1"/>
+		<relation name="FK_AdminRequests_Users_RequesterId" fq-name="public.&quot;AdminRequests&quot;.&quot;FK_AdminRequests_Users_RequesterId&quot;" type="fk" pk-ref="9" fk-ref="2"/>
+		<relation name="FK_AdminRequests_Users_ReviewedById" fq-name="public.&quot;AdminRequests&quot;.&quot;FK_AdminRequests_Users_ReviewedById&quot;" type="fk" pk-ref="9" fk-ref="2"/>
+		<relation name="FK_AdminRequests_Users_TargetId" fq-name="public.&quot;AdminRequests&quot;.&quot;FK_AdminRequests_Users_TargetId&quot;" type="fk" pk-ref="9" fk-ref="2"/>
+		<relation name="FK_Announcements_Users_CreatedById" fq-name="public.&quot;Announcements&quot;.&quot;FK_Announcements_Users_CreatedById&quot;" type="fk" pk-ref="9" fk-ref="3"/>
+		<relation name="FK_AuditLogs_Users_UserId" fq-name="public.&quot;AuditLogs&quot;.&quot;FK_AuditLogs_Users_UserId&quot;" type="fk" pk-ref="9" fk-ref="4"/>
+		<relation name="FK_Categories_Users_CreatedById" fq-name="public.&quot;Categories&quot;.&quot;FK_Categories_Users_CreatedById&quot;" type="fk" pk-ref="9" fk-ref="5"/>
+		<relation name="FK_DeliveryStatuses_Users_UserId" fq-name="public.&quot;DeliveryStatuses&quot;.&quot;FK_DeliveryStatuses_Users_UserId&quot;" type="fk" pk-ref="9" fk-ref="6"/>
+		<relation name="FK_Subscriptions_Users_UserId" fq-name="public.&quot;Subscriptions&quot;.&quot;FK_Subscriptions_Users_UserId&quot;" type="fk" pk-ref="9" fk-ref="7"/>
+		<relation name="FK_Templates_Users_CreatedById" fq-name="public.&quot;Templates&quot;.&quot;FK_Templates_Users_CreatedById&quot;" type="fk" pk-ref="9" fk-ref="8"/>
+	</relations>
+</diagram>

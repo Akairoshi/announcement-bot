@@ -1,4 +1,5 @@
 ﻿using AnnouncementBot.Infrastructure.Configuration;
+using AnnouncementBot.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,10 +20,10 @@ public static class DependencyInjection
 
         var connectionSettings = configuration
             .GetSection(ConnectionSettings.SectionName)
-            .Get<ConnectionSettings>();
+            .Get<ConnectionSettings>() ?? throw new InvalidOperationException("Connection settings are not configured.");
 
-        //services.AddDbContext<AppDbContext>(options =>
-        //    options.UseNpgsql(connectionSettings.ToConnectionString()));
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseNpgsql(connectionSettings.ToConnectionString()));
 
         return services;
     }

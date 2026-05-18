@@ -10,10 +10,10 @@ out/
 *.userprefs
 
 # Конфигурация с секретами — не коммитить
-**/appsettings.json
 **/appsettings.*.json
 # Исключение — example-файл коммитим
 !**/appsettings.example.json
+!**/appsettings.json
 
 # EF Core
 *.db

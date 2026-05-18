@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "AnnouncementBot": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
