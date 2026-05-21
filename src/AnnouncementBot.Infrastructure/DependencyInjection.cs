@@ -1,4 +1,5 @@
-﻿using AnnouncementBot.Infrastructure.Configuration;
+﻿using AnnouncementBot.Domain.Interfaces;
+using AnnouncementBot.Infrastructure.Configuration;
 using AnnouncementBot.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -24,6 +25,7 @@ public static class DependencyInjection
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionSettings.ToConnectionString()));
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;
     }
