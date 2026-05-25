@@ -2,7 +2,7 @@
 {
     public enum AdminRequestType
     {
-        Assigment = 0,
-        Reassigment = 1,
+        Assignment = 0,
+        Reassignment = 1,
     }
 }
