@@ -1,6 +1,7 @@
-﻿using AnnouncementBot.Domain.Entities;
-using AnnouncementBot.Domain.Interfaces;
+﻿using AnnouncementBot.Application.Common.Interfaces;
+using AnnouncementBot.Domain.Entities;
 using AnnouncementBot.Domain.Enums;
+using AnnouncementBot.Domain.Interfaces;
 using MediatR;
 
 namespace AnnouncementBot.Application.Commands.AdminRequests;
@@ -10,7 +11,16 @@ public record HandleAdminRequestCommand(
     long SuperAdminId,
     bool IsApproved,
     string? CategoryName = null
-) : IRequest;
+) : IRequest, IAuditableRequest
+{
+    public long ActorId => SuperAdminId;
+    public string ActionName => IsApproved ? "Одобрение заявки в админы" : "Отклонение заявки в админы";
+    public string EntityName => "AdminRequest";
+    public string GetEntityId() => RequestId.ToString();
+    public string? Details => IsApproved
+        ? $"Заявка одобрена. Назначена категория: {CategoryName ?? "Не указана"}"
+        : "Заявка отклонена супер-админом.";
+}
 
 public class HandleAdminRequestCommandHandler : IRequestHandler<HandleAdminRequestCommand>
 {

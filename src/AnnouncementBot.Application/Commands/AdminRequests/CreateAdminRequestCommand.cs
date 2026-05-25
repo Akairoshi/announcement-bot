@@ -5,6 +5,7 @@ using MediatR;
 
 namespace AnnouncementBot.Application.Commands.AdminRequests;
 
+
 public record CreateAdminRequestCommand(
     long RequesterId,
     AdminRequestType RequestType,
