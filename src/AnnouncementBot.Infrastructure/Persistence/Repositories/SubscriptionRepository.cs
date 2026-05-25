@@ -23,7 +23,9 @@ public class SubscriptionRepository : ISubscriptionRepository
         => await _context.Subscriptions
             .Where(s => s.CategoryId == categoryId)
             .ToListAsync(ct);
-
+    public async Task<Subscription?> GetByUserAndCategoryAsync(long userId, Guid categoryId, CancellationToken ct = default)
+        => await _context.Subscriptions
+            .FirstOrDefaultAsync(s => s.UserId == userId && s.CategoryId == categoryId, ct);
     public async Task<bool> ExistsAsync(long userId, Guid categoryId, CancellationToken ct = default)
         => await _context.Subscriptions
             .AnyAsync(s => s.UserId == userId && s.CategoryId == categoryId, ct);
