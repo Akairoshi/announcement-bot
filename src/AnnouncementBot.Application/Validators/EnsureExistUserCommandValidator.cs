@@ -8,7 +8,7 @@ public class EnsureExistUserCommandValidator : AbstractValidator<EnsureUserExist
     public EnsureExistUserCommandValidator()
     {
         RuleFor(x => x.UserId)
-            .GreaterThan(0).WithMessage("Telegram ID пользователя должен быть больше нуля.");
+            .GreaterThan(0).WithMessage("ID пользователя должен быть больше нуля.");
 
         When(x => x.UserName != null, () =>
         {

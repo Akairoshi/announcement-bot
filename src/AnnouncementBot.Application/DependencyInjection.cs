@@ -13,8 +13,8 @@ public static class DependencyInjection
         services.AddMediatR(configuration =>
         {
             configuration.RegisterServicesFromAssembly(assembly);
-
             configuration.AddOpenBehavior(typeof(ValidationBehavior<,>));
+            configuration.AddOpenBehavior(typeof(AuditLogBehavior<,>));
         });
 
         services.AddValidatorsFromAssembly(assembly);
