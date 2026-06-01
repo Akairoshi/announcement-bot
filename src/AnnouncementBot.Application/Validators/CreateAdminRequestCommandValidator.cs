@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using AnnouncementBot.Application.Commands.AdminRequests;
 using AnnouncementBot.Domain.Enums;
 
@@ -11,7 +11,7 @@ public class CreateAdminRequestCommandValidator : AbstractValidator<CreateAdminR
         RuleFor(x => x.RequesterId)
             .GreaterThan(0).WithMessage("Некорректный Telegram ID заявителя.");
 
-        RuleFor(x => x.Details)
+        RuleFor(x => x.Reason)
             .NotEmpty().WithMessage("Необходимо указать причину подачи заявки.")
             .MaximumLength(500).WithMessage("Описание причины слишком длинное (макс. 500 символов).");
 

@@ -51,8 +51,8 @@ public class ListAdminRequestCommand : IBotCommand
             {
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("✅ Одобрить", $"arv:a:{request.Id}"),
-                    InlineKeyboardButton.WithCallbackData("❌ Отклонить", $"arv:r:{request.Id}")
+                    InlineKeyboardButton.WithCallbackData("✅ Одобрить", $"admin_request_review:approve:{request.Id}"),
+                    InlineKeyboardButton.WithCallbackData("❌ Отклонить", $"admin_request_review:reject:{request.Id}")
                 }
             });
 

@@ -1,4 +1,4 @@
-﻿using AnnouncementBot.Application.Common.Interfaces;
+using AnnouncementBot.Application.Common.Interfaces;
 using AnnouncementBot.Domain.Entities;
 using AnnouncementBot.Domain.Enums;
 using AnnouncementBot.Domain.Interfaces;
@@ -50,7 +50,7 @@ public class HandleAdminRequestCommandHandler : IRequestHandler<HandleAdminReque
                 var category = await _unitOfWork.Categories.GetByNameAsync(request.CategoryName, ct);
                 if (category is null)
                 {
-                    category = new Category(request.CategoryName, adminRequest.RequesterId);
+                    category = new Category(request.CategoryName, request.SuperAdminId);
                     await _unitOfWork.Categories.AddAsync(category, ct);
                 }
 
@@ -92,6 +92,13 @@ public class HandleAdminRequestCommandHandler : IRequestHandler<HandleAdminReque
                 {
                     targetUser.ChangeRole(UserRole.Admin);
                     await _unitOfWork.Users.UpdateAsync(targetUser, ct);
+                }
+
+                var requester = await _unitOfWork.Users.GetByIdAsync(adminRequest.RequesterId, ct);
+                if (requester is not null && requester.Role == UserRole.Admin)
+                {
+                    requester.ChangeRole(UserRole.User);
+                    await _unitOfWork.Users.UpdateAsync(requester, ct);
                 }
             }
 
