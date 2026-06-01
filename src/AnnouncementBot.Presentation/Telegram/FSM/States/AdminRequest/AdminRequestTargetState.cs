@@ -1,4 +1,4 @@
-﻿using AnnouncementBot.Domain.Enums;
+using AnnouncementBot.Domain.Enums;
 using AnnouncementBot.Domain.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot;
@@ -24,13 +24,13 @@ public class AdminRequestTargetState : IConversationState
 
     public async Task HandleAsync(ITelegramBotClient bot, Message message, CancellationToken ct)
     {
-        var username = message.Text?.Trim().TrimStart('@');
+        var input = message.Text?.Trim().TrimStart('@');
 
-        if (string.IsNullOrWhiteSpace(username))
+        if (string.IsNullOrWhiteSpace(input))
         {
             await bot.SendMessage(
                 message.Chat.Id,
-                "⚠️ Username не может быть пустым. Попробуйте ещё раз:",
+                "⚠️ Username или ID пользователя не может быть пустым. Попробуйте ещё раз:",
                 cancellationToken: ct);
             return;
         }
@@ -38,17 +38,18 @@ public class AdminRequestTargetState : IConversationState
         using var scope = _scopeFactory.CreateScope();
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-        var target = await unitOfWork.Users.GetByUsernameAsync(username, ct);
+        var target = long.TryParse(input, out var targetId)
+            ? await unitOfWork.Users.GetByIdAsync(targetId, ct)
+            : await unitOfWork.Users.GetByUsernameAsync(input, ct);
 
         if (target is null)
         {
             await bot.SendMessage(
                 message.Chat.Id,
-                $"❌ Пользователь @{username} не найден. Попробуйте ещё раз:",
+                $"❌ Пользователь {input} не найден. Попробуйте ещё раз:",
                 cancellationToken: ct);
             return;
         }
-
 
         _stateStorage.Set(_userId, new AdminRequestReasonState(
             _userId,
@@ -57,9 +58,13 @@ public class AdminRequestTargetState : IConversationState
             _scopeFactory,
             _stateStorage));
 
+        var targetDisplayName = string.IsNullOrWhiteSpace(target.UserName)
+            ? target.Id.ToString()
+            : $"@{target.UserName}";
+
         await bot.SendMessage(
             message.Chat.Id,
-            $"👤 Цель: @{username}\n\n📝 Укажите причину переназначения:",
+            $"👤 Цель: {targetDisplayName}\n\n📝 Укажите причину переназначения:",
             cancellationToken: ct);
     }
 }
