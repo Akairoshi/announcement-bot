@@ -5,18 +5,18 @@ using AnnouncementBot.Application.DTOs;
 namespace AnnouncementBot.Application.Queries.Templates;
 
 
-public record GetAdminTemplatesQuery(long AdminId) : IRequest<IReadOnlyList<TemplateDto>>;
+public record GetAdminTemplateQuery(long AdminId) : IRequest<IReadOnlyList<TemplateDto>>;
 
-public class GetAdminTemplatesQueryHandler : IRequestHandler<GetAdminTemplatesQuery, IReadOnlyList<TemplateDto>>
+public class GetAdminTemplateQueryHandler : IRequestHandler<GetAdminTemplateQuery, IReadOnlyList<TemplateDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    public GetAdminTemplatesQueryHandler(IUnitOfWork unitOfWork)
+    public GetAdminTemplateQueryHandler(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<IReadOnlyList<TemplateDto>> Handle(GetAdminTemplatesQuery request, CancellationToken ct)
+    public async Task<IReadOnlyList<TemplateDto>> Handle(GetAdminTemplateQuery request, CancellationToken ct)
     {
         var templates = await _unitOfWork.Templates.GetByAdminIdAsync(request.AdminId, ct);
 

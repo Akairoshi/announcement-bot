@@ -1,10 +1,19 @@
-﻿using AnnouncementBot.Domain.Entities;
+using AnnouncementBot.Application.Common.Interfaces;
+using AnnouncementBot.Domain.Entities;
 using AnnouncementBot.Domain.Interfaces;
 using MediatR;
 
 namespace AnnouncementBot.Application.Commands.Templates;
 
-public record AddTemplateCommand(string Name, string Text, long CreatedById) : IRequest<Guid>;
+public record AddTemplateCommand(string Name, string Text, long CreatedById)
+    : IRequest<Guid>, IAuditableRequest
+{
+    public long ActorId => CreatedById;
+    public string ActionName => "TemplateCreated";
+    public string EntityName => "Template";
+    public string? Details => $"Name: {Name}";
+    public string GetEntityId() => string.Empty;
+}
 
 public class AddTemplateCommandHandler : IRequestHandler<AddTemplateCommand, Guid>
 {

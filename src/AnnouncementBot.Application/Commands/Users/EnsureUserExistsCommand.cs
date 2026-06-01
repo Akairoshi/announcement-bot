@@ -17,12 +17,19 @@ public class EnsureUserExistsCommandHandler : IRequestHandler<EnsureUserExistsCo
 
     public async Task Handle(EnsureUserExistsCommand request, CancellationToken ct)
     {
-        var exist = await _unitOfWork.Users.ExistsAsync(request.UserId, ct);
+        var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, ct);
 
-        if (exist) return;
+        if (user is null)
+        {
+            var newUser = new User(request.UserId, request.UserName);
+            await _unitOfWork.Users.AddAsync(newUser, ct);
+        }
+        else if (user.UserName != request.UserName)
+        {
+            user.UpdateUserName(request.UserName);
+            await _unitOfWork.Users.UpdateAsync(user, ct);
+        }
 
-        var user = new User(request.UserId, request.UserName);
-        await _unitOfWork.Users.AddAsync(user, ct);
         await _unitOfWork.SaveChangesAsync(ct);
     }
 }

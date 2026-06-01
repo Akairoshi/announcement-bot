@@ -1,10 +1,19 @@
-﻿using MediatR;
-using AnnouncementBot.Domain.Interfaces;
+using AnnouncementBot.Application.Common.Interfaces;
 using AnnouncementBot.Domain.Enums;
+using AnnouncementBot.Domain.Interfaces;
+using MediatR;
 
 namespace AnnouncementBot.Application.Commands.Users;
 
-public record ChangeUserRoleCommand(long UserId, UserRole Role) : IRequest;
+public record ChangeUserRoleCommand(long UserId, UserRole Role, long ActorId = 0)
+    : IRequest, IAuditableRequest
+{
+    long IAuditableRequest.ActorId => ActorId;
+    public string ActionName => Role == UserRole.Admin ? "AdminAppointed" : "AdminRemoved";
+    public string EntityName => "User";
+    public string? Details => $"NewRole: {Role}";
+    public string GetEntityId() => UserId.ToString();
+}
 
 public class ChangeUserRoleCommandHandler : IRequestHandler<ChangeUserRoleCommand>
 {
@@ -19,7 +28,7 @@ public class ChangeUserRoleCommandHandler : IRequestHandler<ChangeUserRoleComman
     {
         var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, ct);
 
-        if (user == null)
+        if (user is null)
             throw new KeyNotFoundException($"Пользователь {request.UserId} не найден.");
 
         user.ChangeRole(request.Role);

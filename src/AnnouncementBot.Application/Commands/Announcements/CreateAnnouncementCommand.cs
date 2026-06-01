@@ -1,4 +1,5 @@
-﻿using AnnouncementBot.Domain.Entities;
+using AnnouncementBot.Application.Common.Interfaces;
+using AnnouncementBot.Domain.Entities;
 using AnnouncementBot.Domain.Interfaces;
 using MediatR;
 
@@ -8,7 +9,15 @@ public record CreateAnnouncementCommand(
     string Text,
     Guid CategoryId,
     long CreatedById,
-    Guid? TemplateId = null) : IRequest<Guid>;
+    Guid? TemplateId = null)
+    : IRequest<Guid>, IAuditableRequest
+{
+    public long ActorId => CreatedById;
+    public string ActionName => "AnnouncementCreated";
+    public string EntityName => "Announcement";
+    public string? Details => $"CategoryId: {CategoryId}";
+    public string GetEntityId() => string.Empty;
+}
 
 public class CreateAnnouncementCommandHandler : IRequestHandler<CreateAnnouncementCommand, Guid>
 {

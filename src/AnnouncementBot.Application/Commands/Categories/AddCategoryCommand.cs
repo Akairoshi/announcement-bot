@@ -1,10 +1,19 @@
-﻿using AnnouncementBot.Domain.Entities;
+using AnnouncementBot.Application.Common.Interfaces;
+using AnnouncementBot.Domain.Entities;
 using AnnouncementBot.Domain.Interfaces;
 using MediatR;
 
 namespace AnnouncementBot.Application.Commands.Categories;
 
-public record AddCategoryCommand(string Name, long CreatedById) : IRequest<Guid>;
+public record AddCategoryCommand(string Name, long CreatedById)
+    : IRequest<Guid>, IAuditableRequest
+{
+    public long ActorId => CreatedById;
+    public string ActionName => "CategoryCreated";
+    public string EntityName => "Category";
+    public string? Details => $"Name: {Name}";
+    public string GetEntityId() => string.Empty;
+}
 
 public class AddCategoryCommandHandler : IRequestHandler<AddCategoryCommand, Guid>
 {

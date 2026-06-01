@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using AnnouncementBot.Domain.Interfaces;
 using AnnouncementBot.Domain.Entities;
 using AnnouncementBot.Application.Common.Interfaces;
@@ -19,15 +19,20 @@ public class AuditLogBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest,
     {
         var response = await next();
 
+        Console.WriteLine($"[AUDIT] Request type: {typeof(TRequest).Name}, IsAuditable: {request is IAuditableRequest}");
+
         if (request is IAuditableRequest auditableRequest)
         {
+            var entityId = response is Guid guid
+                ? guid.ToString()
+                : auditableRequest.GetEntityId();
+
             var log = new AuditLog(
                 auditableRequest.ActorId,
                 auditableRequest.ActionName,
                 auditableRequest.EntityName,
-                auditableRequest.GetEntityId(),
-                auditableRequest.Details
-            );
+                entityId,
+                auditableRequest.Details);
 
             await _unitOfWork.AuditLogs.AddAsync(log, ct);
             await _unitOfWork.SaveChangesAsync(ct);

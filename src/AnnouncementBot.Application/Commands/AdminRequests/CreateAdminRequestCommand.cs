@@ -1,16 +1,25 @@
-﻿using AnnouncementBot.Domain.Entities;
+using AnnouncementBot.Application.Common.Interfaces;
+using AnnouncementBot.Domain.Entities;
 using AnnouncementBot.Domain.Interfaces;
 using AnnouncementBot.Domain.Enums;
 using MediatR;
 
 namespace AnnouncementBot.Application.Commands.AdminRequests;
 
-
 public record CreateAdminRequestCommand(
     long RequesterId,
     AdminRequestType RequestType,
-    string Details,
-    long? TargetId = null) : IRequest<Guid>;
+    string Reason,
+    long? TargetId = null) : IRequest<Guid>, IAuditableRequest
+{
+    public long ActorId => RequesterId;
+    public string ActionName => RequestType == AdminRequestType.Assignment
+        ? "AdminRequestCreated"
+        : "AdminReassignmentRequestCreated";
+    public string EntityName => "AdminRequest";
+    public string? Details => $"Type: {RequestType}, Reason: {Reason}, TargetId: {TargetId}";
+    public string GetEntityId() => string.Empty;
+}
 
 public class CreateAdminRequestCommandHandler : IRequestHandler<CreateAdminRequestCommand, Guid>
 {
@@ -33,12 +42,11 @@ public class CreateAdminRequestCommandHandler : IRequestHandler<CreateAdminReque
                 throw new KeyNotFoundException($"Целевой пользователь с ID {request.TargetId} не найден.");
         }
 
-        // Конструктор: (long requesterId, long? targetId, AdminRequestType type, string details)
         var adminRequest = new AdminRequest(
             request.RequesterId,
             request.TargetId,
             request.RequestType,
-            request.Details);
+            request.Reason);
 
         await _unitOfWork.AdminRequests.AddAsync(adminRequest, ct);
         await _unitOfWork.SaveChangesAsync(ct);

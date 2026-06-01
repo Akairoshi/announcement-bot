@@ -1,9 +1,18 @@
-﻿using AnnouncementBot.Domain.Interfaces;
+using AnnouncementBot.Application.Common.Interfaces;
+using AnnouncementBot.Domain.Interfaces;
 using MediatR;
 
 namespace AnnouncementBot.Application.Commands.Templates;
 
-public record UpdateTemplateCommand(Guid TemplateId, string? NewName, string? NewText) : IRequest;
+public record UpdateTemplateCommand(Guid TemplateId, string? NewName, string? NewText, long ActorId = 0)
+    : IRequest, IAuditableRequest
+{
+    long IAuditableRequest.ActorId => ActorId;
+    public string ActionName => "TemplateUpdated";
+    public string EntityName => "Template";
+    public string? Details => $"NewName: {NewName}, NewText: {NewText}";
+    public string GetEntityId() => TemplateId.ToString();
+}
 
 public class UpdateTemplateCommandHandler : IRequestHandler<UpdateTemplateCommand>
 {

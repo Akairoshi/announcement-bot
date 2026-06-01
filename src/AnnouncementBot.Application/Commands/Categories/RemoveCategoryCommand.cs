@@ -1,9 +1,18 @@
-﻿using AnnouncementBot.Domain.Interfaces;
+using AnnouncementBot.Application.Common.Interfaces;
+using AnnouncementBot.Domain.Interfaces;
 using MediatR;
 
 namespace AnnouncementBot.Application.Commands.Categories;
 
-public record RemoveCategoryCommand(Guid CategoryId) : IRequest;
+public record RemoveCategoryCommand(Guid CategoryId, long ActorId = 0)
+    : IRequest, IAuditableRequest
+{
+    long IAuditableRequest.ActorId => ActorId;
+    public string ActionName => "CategoryDeleted";
+    public string EntityName => "Category";
+    public string? Details => null;
+    public string GetEntityId() => CategoryId.ToString();
+}
 
 public class RemoveCategoryCommandHandler : IRequestHandler<RemoveCategoryCommand>
 {

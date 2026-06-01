@@ -1,9 +1,18 @@
-﻿using AnnouncementBot.Domain.Interfaces;
+using AnnouncementBot.Application.Common.Interfaces;
+using AnnouncementBot.Domain.Interfaces;
 using MediatR;
 
 namespace AnnouncementBot.Application.Commands.Categories;
 
-public record UpdateCategoryCommand(Guid CategoryId, string NewName) : IRequest;
+public record UpdateCategoryCommand(Guid CategoryId, string NewName, long ActorId = 0)
+    : IRequest, IAuditableRequest
+{
+    long IAuditableRequest.ActorId => ActorId;
+    public string ActionName => "CategoryUpdated";
+    public string EntityName => "Category";
+    public string? Details => $"NewName: {NewName}";
+    public string GetEntityId() => CategoryId.ToString();
+}
 
 public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryCommand>
 {
