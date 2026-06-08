@@ -1,21 +1,27 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using AnnouncementBot.Presentation.Telegram.Callbacks;
+using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.ReplyMarkups;
-using AnnouncementBot.Domain.Interfaces;
 
 namespace AnnouncementBot.Presentation.Telegram.FSM.States.Announcement;
 
 public class AnnouncementTextState : IConversationState
 {
     private readonly long _userId;
+    private readonly Guid _categoryId;
     private readonly Guid? _templateId;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ConversationStateStorage _stateStorage;
 
-    public AnnouncementTextState(long userId, Guid? templateId, IServiceScopeFactory scopeFactory, ConversationStateStorage stateStorage)
+    public AnnouncementTextState(
+        long userId,
+        Guid categoryId,
+        Guid? templateId,
+        IServiceScopeFactory scopeFactory,
+        ConversationStateStorage stateStorage)
     {
         _userId = userId;
+        _categoryId = categoryId;
         _templateId = templateId;
         _scopeFactory = scopeFactory;
         _stateStorage = stateStorage;
@@ -25,41 +31,24 @@ public class AnnouncementTextState : IConversationState
     {
         var text = message.Text?.Trim();
 
-        if (string.IsNullOrWhiteSpace(text))
+        if (string.IsNullOrEmpty(text))
         {
-            await bot.SendMessage(message.Chat.Id, "⚠️ Текст не может быть пустым:", cancellationToken: ct);
+            await bot.SendMessage(
+                message.Chat.Id,
+                "⚠️ Пожалуйста, введите корректный текстовый формат объявления.",
+                cancellationToken: ct);
             return;
         }
 
-        _stateStorage.Set(_userId, new AnnouncementCategoryState(
-            _userId, text, _templateId, _scopeFactory, _stateStorage));
+        var callbackHandler = new AnnouncementCallbackHandler(_stateStorage, _scopeFactory);
 
-        using var scope = _scopeFactory.CreateScope();
-        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-        var accesses = await unitOfWork.AdminCategoryAccesses.GetByAdminIdAsync(_userId, ct);
-
-        var buttons = new List<InlineKeyboardButton[]>();
-        foreach (var access in accesses)
-        {
-            var category = await unitOfWork.Categories.GetByIdAsync(access.CategoryId, ct);
-            if (category is not null)
-                buttons.Add(new[]
-                {
-                    InlineKeyboardButton.WithCallbackData(category.Name, $"announcement_category:{category.Id}")
-                });
-        }
-
-        if (!buttons.Any())
-        {
-            await bot.SendMessage(message.Chat.Id, "❌ У вас нет доступных категорий.", cancellationToken: ct);
-            _stateStorage.Clear(_userId);
-            return;
-        }
-
-        await bot.SendMessage(
+        await callbackHandler.ShowConfirmationAsync(
+            bot,
+            _userId,
             message.Chat.Id,
-            $"📋 Предпросмотр:\n\n{text}\n\n📂 Выберите категорию:",
-            replyMarkup: new InlineKeyboardMarkup(buttons),
-            cancellationToken: ct);
+            text,
+            _categoryId,
+            _templateId,
+            ct);
     }
 }

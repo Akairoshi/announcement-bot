@@ -36,7 +36,8 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddScoped<IBotMiddleware, AuthorizationMiddleware>();
 
         services.AddScoped<IBotCommand, StartCommand>();
-        
+        services.AddScoped<IBotCommand, CancelCommand>();
+
         services.AddScoped<IBotCommand, ListAnnouncementCommand>();
         services.AddScoped<IBotCommand, ListTemplateCommand>();
         services.AddScoped<IBotCommand, ListCategoryCommand>();

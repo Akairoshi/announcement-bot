@@ -1,8 +1,6 @@
-using AnnouncementBot.Application.Queries.Templates;
+﻿using AnnouncementBot.Domain.Interfaces;
 using AnnouncementBot.Presentation.Telegram.Commands.Interfaces;
 using AnnouncementBot.Presentation.Telegram.FSM;
-using AnnouncementBot.Presentation.Telegram.FSM.States.Announcement;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -12,15 +10,13 @@ namespace AnnouncementBot.Presentation.Telegram.Commands;
 
 public class MakeAnnouncementCommand : IBotCommand
 {
-    private readonly IMediator _mediator;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ConversationStateStorage _stateStorage;
 
     public string Command => "/make_announcement";
 
-    public MakeAnnouncementCommand(IMediator mediator, IServiceScopeFactory scopeFactory, ConversationStateStorage stateStorage)
+    public MakeAnnouncementCommand(IServiceScopeFactory scopeFactory, ConversationStateStorage stateStorage)
     {
-        _mediator = mediator;
         _scopeFactory = scopeFactory;
         _stateStorage = stateStorage;
     }
@@ -28,28 +24,32 @@ public class MakeAnnouncementCommand : IBotCommand
     public async Task ExecuteAsync(ITelegramBotClient bot, Message message, CancellationToken ct)
     {
         var userId = message.From!.Id;
-        var templates = await _mediator.Send(new GetAdminTemplateQuery(userId), ct);
+        _stateStorage.Clear(userId);
 
-        if (!templates.Any())
+        using var scope = _scopeFactory.CreateScope();
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        var accesses = await unitOfWork.AdminCategoryAccesses.GetByAdminIdAsync(userId, ct);
+
+        if (!accesses.Any())
         {
-            _stateStorage.Set(userId, new AnnouncementTextState(userId, null, _scopeFactory, _stateStorage));
-            await bot.SendMessage(
-                message.Chat.Id,
-                "📝 Введите текст объявления:",
-                replyMarkup: new ReplyKeyboardRemove(), // ← добавь
-                cancellationToken: ct);
+            await bot.SendMessage(message.Chat.Id, "❌ У вас нет доступных категорий.", cancellationToken: ct);
             return;
         }
 
-        var buttons = templates
-            .Select(t => new[] { InlineKeyboardButton.WithCallbackData(t.Name, $"announcement_template:{t.Id}") })
-            .ToList();
-
-        buttons.Add(new[] { InlineKeyboardButton.WithCallbackData("✏️ Без шаблона", "announcement_template:none") });
+        var buttons = new List<InlineKeyboardButton[]>();
+        foreach (var access in accesses)
+        {
+            var category = await unitOfWork.Categories.GetByIdAsync(access.CategoryId, ct);
+            if (category is not null)
+                buttons.Add(new[]
+                {
+                    InlineKeyboardButton.WithCallbackData(category.Name, $"ann_cat:{category.Id}")
+                });
+        }
 
         await bot.SendMessage(
             message.Chat.Id,
-            "📋 Выберите шаблон или продолжите без него:",
+            "📂 Выберите категорию для объявления:",
             replyMarkup: new InlineKeyboardMarkup(buttons),
             cancellationToken: ct);
     }

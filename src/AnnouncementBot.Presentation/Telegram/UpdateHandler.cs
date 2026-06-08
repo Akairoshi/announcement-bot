@@ -78,6 +78,17 @@ public class UpdateHandler : IUpdateHandler
         var userId = message.From!.Id;
         _logger.LogInformation("[СООБЩЕНИЕ] От ID {UserId}: {Text}", userId, text);
 
+        if (text == "/cancel" || text.StartsWith("/cancel "))
+        {
+            var cancelCommand = commands.FirstOrDefault(c => c.Command == "/cancel");
+            if (cancelCommand is not null)
+            {
+                await cancelCommand.ExecuteAsync(botClient, message, ct);
+                return;
+            }
+        }
+
+
         var activeState = _stateStorage.Get(userId);
         if (activeState is not null)
         {
@@ -85,17 +96,20 @@ public class UpdateHandler : IUpdateHandler
             return;
         }
 
-        // иначе роутим к команде
         var command = commands.FirstOrDefault(c => text == c.Command)
             ?? commands.FirstOrDefault(c => text.StartsWith(c.Command + " "));
 
         if (command is not null)
+        {
             await command.ExecuteAsync(botClient, message, ct);
+        }
         else
+        {
             await botClient.SendMessage(
                 message.Chat.Id,
                 "Неизвестная команда. Используй /start для начала.",
                 cancellationToken: ct);
+        }
     }
 
     private async Task HandleCallbackQueryAsync(
