@@ -29,7 +29,6 @@ public class FillTemplateState : IConversationState
         _templateText = templateText;
         _scopeFactory = scopeFactory;
 
-        // Вытаскиваем все уникальные плейсхолдеры из фигурных скобок
         _remainingPlaceholders = PlaceholderRegex.Matches(templateText)
             .Select(m => m.Groups[1].Value)
             .Distinct()
@@ -53,18 +52,13 @@ public class FillTemplateState : IConversationState
             return;
         }
 
-        // Записываем ответ для текущей переменной
         var currentPlaceholder = _remainingPlaceholders[0];
         _filledValues[currentPlaceholder] = text;
         _remainingPlaceholders.RemoveAt(0);
 
-        // Продвигаем диалог вперед
         await AdvanceDialogueAsync(bot, chatId, message.From!.Id, ct);
     }
 
-    /// <summary>
-    /// Точка входа для запуска или продолжения опроса
-    /// </summary>
     public async Task AdvanceDialogueAsync(ITelegramBotClient bot, long chatId, long userId, CancellationToken ct)
     {
         if (_remainingPlaceholders.Count > 0)
@@ -72,13 +66,13 @@ public class FillTemplateState : IConversationState
             var nextPlaceholder = _remainingPlaceholders[0];
             await bot.SendMessage(
                 chatId: chatId,
-                text: $"📝 Введите значение для переменной: <b>{{{nextPlaceholder}}}</b>",
+                text: $"📝 Введите значение для переменной: <b>{{{nextPlaceholder}}}</b>\n\n" +
+            "<i>Для отмены введите /cancel</i>",
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
             return;
         }
 
-        // Переменных нет или они закончились -> Показываем подтверждение
         _isWaitingForConfirmation = true;
         string finalizedText = BuildFinalText();
 
@@ -99,9 +93,6 @@ public class FillTemplateState : IConversationState
             cancellationToken: ct);
     }
 
-    /// <summary>
-    /// Обработка инлайн-кнопок "Да/Нет" на этапе подтверждения
-    /// </summary>
     public async Task HandleConfirmationAsync(ITelegramBotClient bot, string decision, long userId, CancellationToken ct)
     {
         if (decision == "yes")

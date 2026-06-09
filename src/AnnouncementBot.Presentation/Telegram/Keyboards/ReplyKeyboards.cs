@@ -22,7 +22,7 @@ public static class ReplyKeyboards
         return new ReplyKeyboardMarkup(new[]
         {
 
-            new[] { new KeyboardButton("/profile"), new KeyboardButton("/subscribe") },
+            new[] { new KeyboardButton("/profile"), new KeyboardButton("/subscribe"), new KeyboardButton("/admin_request") },
             new[] { new KeyboardButton("/make_announcement"), new KeyboardButton("/list_announcement") },
             new[] { new KeyboardButton("/add_template"), new KeyboardButton("/update_template"), new KeyboardButton("/remove_template") },
         })
