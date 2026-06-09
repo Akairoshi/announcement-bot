@@ -2,7 +2,7 @@
 using AnnouncementBot.Domain.Interfaces;
 using AnnouncementBot.Application.DTOs;
 
-namespace AnnouncementBot.Application.Queries.Templates;
+namespace AnnouncementBot.Application.Queries;
 
 
 public record GetAdminTemplateQuery(long AdminId) : IRequest<IReadOnlyList<TemplateDto>>;

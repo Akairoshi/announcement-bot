@@ -19,41 +19,93 @@ public class TelegramBotWorker : BackgroundService
     private readonly IUpdateHandler _updateHandler;
     private readonly ILogger<TelegramBotWorker> _logger;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IHostApplicationLifetime _appLifetime;
 
     public TelegramBotWorker(
         ITelegramBotClient botClient,
         IUpdateHandler updateHandler,
         ILogger<TelegramBotWorker> logger,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        IHostApplicationLifetime appLifetime)
     {
         _botClient = botClient;
         _updateHandler = updateHandler;
         _logger = logger;
         _serviceProvider = serviceProvider;
+        _appLifetime = appLifetime;
     }
 
     public override async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Проверка подключения к базе данных...");
+        bool isDbReady = false;
+        bool isTelegramReady = false;
 
-        using var scope = _serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var delayInterval = TimeSpan.FromSeconds(10);
 
-        try
+        _logger.LogInformation("Запуск проверки и подготовки необходимых ресурсов...");
+
+        while (!cancellationToken.IsCancellationRequested)
         {
-            if (await dbContext.Database.CanConnectAsync(cancellationToken))
+            if (!isDbReady)
             {
-                _logger.LogInformation("Подключение к PostgreSQL установлено!");
-                await EnsureSuperAdminAsync(scope, cancellationToken);
+                _logger.LogInformation("Проверка подключения к базе данных...");
+
+                using var scope = _serviceProvider.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                try
+                {
+                    if (await dbContext.Database.CanConnectAsync(cancellationToken))
+                    {
+                        _logger.LogInformation("Подключение к базе данных установлено.");
+
+                        await EnsureSuperAdminAsync(scope, cancellationToken);
+                        isDbReady = true;
+                    }
+                    else
+                    {
+                        _logger.LogError("База данных недоступна на порту. Проверьте строку подключения или запуск контейнера.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("Ошибка при работе с базе данных: {Message}", ex.Message);
+                }
             }
-            else
+
+            if (isDbReady && !isTelegramReady)
             {
-                _logger.LogError("База данных не найдена. Накати миграции.");
+                _logger.LogInformation("Проверка соединения с Telegram API...");
+                try
+                {
+                    var me = await _botClient.GetMe(cancellationToken);
+                    _logger.LogInformation("Соединение с Telegram установлено! Бот: @{Username}", me.Username);
+                    isTelegramReady = true;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("Нет связи с Telegram API: {Message}", ex.Message);
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogCritical(ex, "Не удалось подключиться к PostgreSQL!");
+
+            if (isDbReady && isTelegramReady)
+            {
+                _logger.LogInformation("Все ресурсы успешно подготовлены. Бот готов к запуску.");
+                break;
+            }
+
+            _logger.LogInformation("Ожидание ресурсов... Следующая проверка через 10 секунд.");
+
+            try
+            {
+                await Task.Delay(delayInterval, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning("Проверка ресурсов была прервана отменой приложения.");
+                _appLifetime.StopApplication();
+                return;
+            }
         }
 
         await base.StartAsync(cancellationToken);

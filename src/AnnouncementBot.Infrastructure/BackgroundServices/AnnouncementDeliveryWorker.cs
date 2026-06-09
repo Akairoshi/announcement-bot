@@ -74,7 +74,7 @@ public class AnnouncementDeliveryWorker : BackgroundService
 
             try
             {
-                var category = unitOfWork.Categories.GetByIdAsync(announcement.CategoryId, ct).Result;
+                var category = await unitOfWork.Categories.GetByIdAsync(announcement.CategoryId, ct);
                 await _botClient.SendMessage(
                     chatId: delivery.UserId,
                     text: $"📢 <b>Объявление - {category?.Name}</b>\n\n{announcement.Text}",
@@ -89,6 +89,7 @@ public class AnnouncementDeliveryWorker : BackgroundService
                     delivery.AnnouncementId, delivery.UserId);
 
                 delivery.MarkAsFailed();
+                delivery.MarkAsFailedStatus(ex.HResult);
             }
 
             await Task.Delay(50, ct);

@@ -1,5 +1,4 @@
 using AnnouncementBot.Application.DTOs;
-using AnnouncementBot.Domain.Enums;
 using AnnouncementBot.Domain.Interfaces;
 using MediatR;
 

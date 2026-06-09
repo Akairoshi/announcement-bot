@@ -96,6 +96,11 @@ public class MakeAnnouncementCallbackHandler : ICallbackHandler
             _stateStorage.Set(userId, fillState);
 
             await bot.EditMessageReplyMarkup(chatId, messageId, replyMarkup: null, cancellationToken: ct);
+            await bot.SendMessage(
+                chatId: chatId,
+                text: $"<b>Текст шаблона:</b>\n{templateText}",
+                parseMode: ParseMode.Html,
+                cancellationToken: ct);
             await fillState.AdvanceDialogueAsync(bot, chatId, userId, ct);
 
             return;

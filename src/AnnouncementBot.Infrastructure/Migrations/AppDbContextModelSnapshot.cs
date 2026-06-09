@@ -184,6 +184,9 @@ namespace AnnouncementBot.Infrastructure.Migrations
                     b.Property<Guid>("AnnouncementId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("ErrorStatus")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("LastAttemptAt")
                         .HasColumnType("timestamp with time zone");
 

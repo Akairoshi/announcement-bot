@@ -53,10 +53,6 @@ public class ProfileCommand : IBotCommand
             case UserRole.SuperAdmin:
             {
                 var allCategories = await unitOfWork.Categories.GetAllAsync(ct);
-                string Label = "<b>📂 Все категории:</b>";
-                string Block = allCategories.Any()
-                    ? string.Join("\n", allCategories.Select(c => $"  - {c.Name}"))
-                    : "  <i>Категорий пока нет</i>";
 
                 var subscriptions = await unitOfWork.Subscriptions.GetByUserIdAsync(userId, ct);
                 var subscribedIds = subscriptions.Select(s => s.CategoryId).ToHashSet();
@@ -66,7 +62,7 @@ public class ProfileCommand : IBotCommand
                 string subscribeBlock = subscribedCategories.Any()
                     ? string.Join("\n", subscribedCategories.Select(c => $"  - {c.Name}"))
                     : "  <i>Нет активных подписок</i>";
-                plate = Label + "\n" + Block + "\n\n" + subscribeLabel + "\n" + subscribeBlock;
+                plate = subscribeLabel + "\n" + subscribeBlock;
                 break;
             }
             case UserRole.Admin:
@@ -76,7 +72,7 @@ public class ProfileCommand : IBotCommand
                 var allCategories = await unitOfWork.Categories.GetAllAsync(ct);
                 var adminCategories = allCategories.Where(c => categoryIds.Contains(c.Id)).ToList();
 
-                string categoryLabel = "<b>📂 Мои категории:</b>";
+                string categoryLabel = "<b>📂 Моя категория:</b>";
                 string categoryBlock = adminCategories.Any()
                     ? string.Join("\n", adminCategories.Select(c => $"  - {c.Name}"))
                     : "  <i>Нет назначенных категорий</i>";

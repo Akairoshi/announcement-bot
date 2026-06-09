@@ -27,7 +27,9 @@ public class AnnouncementRepository : IAnnouncementRepository
             .ToListAsync(ct);
 
     public async Task<IReadOnlyList<Announcement>> GetAllAsync(CancellationToken ct = default)
-        => await _context.Announcements.ToListAsync(ct);
+        => await _context.Announcements
+        .Include(a => a.DeliveryStatuses)
+        .ToListAsync(ct);
 
     public async Task<IReadOnlyList<Announcement>> GetOlderThanAsync(DateTime date, CancellationToken ct = default)
         => await _context.Announcements

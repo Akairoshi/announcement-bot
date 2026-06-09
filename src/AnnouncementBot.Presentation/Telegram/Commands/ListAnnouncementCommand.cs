@@ -21,6 +21,7 @@ public class ListAnnouncementCommand : IBotCommand
 
     public async Task ExecuteAsync(ITelegramBotClient bot, Message message, CancellationToken ct)
     {
+        bool showStatistic = false;
         var userId = message.From!.Id;
 
         using var scope = _serviceProvider.CreateScope();
@@ -34,11 +35,14 @@ public class ListAnnouncementCommand : IBotCommand
 
         if (user.Role == UserRole.SuperAdmin)
         {
+            showStatistic = true;
             announcements = await unitOfWork.Announcements.GetAllAsync(ct);
             allCategories = await unitOfWork.Categories.GetAllAsync(ct);
+
         }
         else if (user.Role == UserRole.Admin)
         {
+            showStatistic = true;
             var accesses = await unitOfWork.AdminCategoryAccesses.GetByAdminIdAsync(userId, ct);
             var categoryIds = accesses.Select(a => a.CategoryId).ToHashSet();
 
@@ -84,11 +88,26 @@ public class ListAnnouncementCommand : IBotCommand
         var responseText = "<b>📬 Последние объявления:</b>\n\n";
         foreach (var ann in recent)
         {
-            var categoryName = categoryMap.TryGetValue(ann.CategoryId, out var name) ? name : "Неизвестно";
-            responseText += $"<b>📁</b> {categoryName}\n" +
-                            $"<b>📅</b> {ann.CreatedAt:dd.MM.yyyy HH:mm}\n" +
-                            $"{ann.Text}\n" +
-                            $"──────────────\n\n";
+            var categoryName = categoryMap.TryGetValue(ann.CategoryId, out var name)
+                ? name
+                : "Неизвестно";
+
+            var successCount = ann.DeliveryStatuses.Count(x =>
+                x.Status == DeliverySentStatus.Sent);
+
+            var failedCount = ann.DeliveryStatuses.Count(x =>
+                x.Status == DeliverySentStatus.Failed);
+
+            var pendingCount = ann.DeliveryStatuses.Count(x =>
+                x.Status == DeliverySentStatus.Pending);
+
+            responseText +=
+                $"<b>📁</b> {categoryName}\n" +
+                $"<b>📅</b> {ann.CreatedAt:dd.MM.yyyy HH:mm}\n\n" +
+                (showStatistic ? $"<b>📊 Статистика:</b>\n" + $"✅ {successCount} | ❌ {failedCount} | ⏳ {pendingCount}\n\n" : string.Empty) +
+
+                $"{ann.Text}\n" +
+                $"──────────────\n\n";
         }
 
         await bot.SendMessage(

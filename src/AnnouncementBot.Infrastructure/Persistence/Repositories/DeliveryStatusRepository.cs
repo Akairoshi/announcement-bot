@@ -22,6 +22,10 @@ public class DeliveryStatusRepository : IDeliveryStatusRepository
             .Where(d => (d.Status == DeliverySentStatus.Pending || d.Status == DeliverySentStatus.Failed)
                 && d.RetryCount < maxRetryCount)
             .ToListAsync(ct);
+    public async Task<IReadOnlyList<DeliveryStatus>> GetWithErrorCodeAsync(int errorCode, CancellationToken ct = default) 
+        => await _context.DeliveryStatuses
+        .Where(d => ( d.ErrorStatus == (DeliveryErrorStatus)errorCode))
+        .ToListAsync(ct);
 
     public async Task<IReadOnlyList<DeliveryStatus>> GetByAnnouncementIdAsync(Guid announcementId, CancellationToken ct = default)
         => await _context.DeliveryStatuses

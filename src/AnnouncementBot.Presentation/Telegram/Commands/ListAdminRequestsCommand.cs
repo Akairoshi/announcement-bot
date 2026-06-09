@@ -1,5 +1,5 @@
 using AnnouncementBot.Presentation.Telegram.Commands.Interfaces;
-using AnnouncementBot.Application.Queries.AdminRequests;
+using AnnouncementBot.Application.Queries;
 using AnnouncementBot.Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;

@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AnnouncementBot.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260518093512_InitialCreate")]
+    [Migration("20260609144055_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -186,6 +186,9 @@ namespace AnnouncementBot.Infrastructure.Migrations
 
                     b.Property<Guid>("AnnouncementId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("ErrorStatus")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("LastAttemptAt")
                         .HasColumnType("timestamp with time zone");

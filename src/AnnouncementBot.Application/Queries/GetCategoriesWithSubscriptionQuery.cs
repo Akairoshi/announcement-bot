@@ -2,7 +2,7 @@
 using AnnouncementBot.Domain.Interfaces;
 using AnnouncementBot.Application.DTOs;
 
-namespace AnnouncementBot.Application.Queries.Categories;
+namespace AnnouncementBot.Application.Queries;
 
 public record GetCategoriesWithSubscriptionQuery(long UserId) : IRequest<IReadOnlyList<CategorySubscriptionDto>>;
 

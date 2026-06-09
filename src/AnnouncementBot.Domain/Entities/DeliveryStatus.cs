@@ -8,6 +8,7 @@ namespace AnnouncementBot.Domain.Entities
         public Guid AnnouncementId { get; private set; }
         public long UserId { get; private set; }
         public DeliverySentStatus Status { get; private set; }
+        public DeliveryErrorStatus ErrorStatus { get; private set; }
         public int RetryCount { get; private set; }
         public DateTime? LastAttemptAt { get; private set; }
         public DateTime? SentAt { get; private set; }
@@ -32,6 +33,10 @@ namespace AnnouncementBot.Domain.Entities
             RetryCount++;
             Status = DeliverySentStatus.Failed;
             LastAttemptAt = DateTime.UtcNow;
+        }
+        public void MarkAsFailedStatus(int status)
+        {
+            ErrorStatus = (DeliveryErrorStatus)status;
         }
 
     }

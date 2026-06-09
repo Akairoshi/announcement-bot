@@ -217,6 +217,7 @@ namespace AnnouncementBot.Infrastructure.Migrations
                     AnnouncementId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<long>(type: "bigint", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
+                    ErrorStatus = table.Column<int>(type: "integer", nullable: false),
                     RetryCount = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
                     LastAttemptAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     SentAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)

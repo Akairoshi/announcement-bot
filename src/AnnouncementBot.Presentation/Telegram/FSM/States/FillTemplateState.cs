@@ -33,6 +33,7 @@ public class FillTemplateState : IConversationState
             .Select(m => m.Groups[1].Value)
             .Distinct()
             .ToList();
+
     }
 
     public async Task HandleAsync(ITelegramBotClient bot, Message message, CancellationToken ct)
@@ -55,7 +56,6 @@ public class FillTemplateState : IConversationState
         var currentPlaceholder = _remainingPlaceholders[0];
         _filledValues[currentPlaceholder] = text;
         _remainingPlaceholders.RemoveAt(0);
-
         await AdvanceDialogueAsync(bot, chatId, message.From!.Id, ct);
     }
 

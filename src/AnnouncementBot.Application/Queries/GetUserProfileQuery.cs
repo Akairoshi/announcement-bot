@@ -3,7 +3,7 @@ using AnnouncementBot.Domain.Interfaces;
 using AnnouncementBot.Domain.Enums;
 using AnnouncementBot.Application.DTOs;
 
-namespace AnnouncementBot.Application.Queries.Users;
+namespace AnnouncementBot.Application.Queries;
 
 public record GetUserProfileQuery(long UserId) : IRequest<UserProfileDto>;
 

@@ -2,7 +2,7 @@
 using AnnouncementBot.Domain.Interfaces;
 using AnnouncementBot.Application.DTOs;
 
-namespace AnnouncementBot.Application.Queries.AdminRequests;
+namespace AnnouncementBot.Application.Queries;
 
 // Добавляем параметр Limit в рекорд. По умолчанию будет 30, если не передать другое
 public record GetPendingAdminRequestsQuery(int Limit = 30) : IRequest<IReadOnlyList<PendingRequestDto>>;
