@@ -1,4 +1,3 @@
-﻿// Infrastructure/Persistence/Repositories/AnnouncementRepository.cs
 using AnnouncementBot.Domain.Entities;
 using AnnouncementBot.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +46,12 @@ public class AnnouncementRepository : IAnnouncementRepository
     public Task DeleteAsync(Announcement entity, CancellationToken ct = default)
     {
         _context.Announcements.Remove(entity);
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteRangeAsync(IEnumerable<Announcement> entities, CancellationToken ct = default)
+    {
+        _context.Announcements.RemoveRange(entities);
         return Task.CompletedTask;
     }
 }

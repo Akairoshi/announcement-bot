@@ -1,4 +1,5 @@
-﻿using AnnouncementBot.Domain.Interfaces;
+using AnnouncementBot.Domain.Interfaces;
+using AnnouncementBot.Infrastructure.BackgroundServices;
 using AnnouncementBot.Infrastructure.Configuration;
 using AnnouncementBot.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +16,7 @@ public static class DependencyInjection
     {
         services.Configure<BotConfiguration>(
             configuration.GetSection(BotConfiguration.SectionName));
-        
+
         services.Configure<SuperAdminConfiguration>(
             configuration.GetSection(SuperAdminConfiguration.SectionName));
 
@@ -25,7 +26,11 @@ public static class DependencyInjection
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionSettings.ToConnectionString()));
+
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.AddHostedService<AnnouncementDeliveryWorker>();
+        services.AddHostedService<AnnouncementCleanerWorker>();
 
         return services;
     }

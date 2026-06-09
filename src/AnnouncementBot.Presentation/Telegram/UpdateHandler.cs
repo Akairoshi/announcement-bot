@@ -80,19 +80,30 @@ public class UpdateHandler : IUpdateHandler
 
         if (text == "/cancel" || text.StartsWith("/cancel "))
         {
+            var activeState = _stateStorage.Get(userId);
+            if (activeState is not null)
+            {
+                _stateStorage.Clear(userId);
+            }
+
             var cancelCommand = commands.FirstOrDefault(c => c.Command == "/cancel");
             if (cancelCommand is not null)
             {
                 await cancelCommand.ExecuteAsync(botClient, message, ct);
                 return;
             }
+
+            await botClient.SendMessage(
+                message.Chat.Id,
+                activeState is not null ? "❌ Действие отменено." : "У вас нет активных действий для отмены.",
+                cancellationToken: ct);
+            return;
         }
 
-
-        var activeState = _stateStorage.Get(userId);
-        if (activeState is not null)
+        var currentActiveState = _stateStorage.Get(userId);
+        if (currentActiveState is not null)
         {
-            await activeState.HandleAsync(botClient, message, ct);
+            await currentActiveState.HandleAsync(botClient, message, ct);
             return;
         }
 

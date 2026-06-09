@@ -2,7 +2,7 @@
 using AnnouncementBot.Domain.Enums;
 using AnnouncementBot.Domain.Interfaces;
 using AnnouncementBot.Infrastructure.Configuration;
-using AnnouncementBot.Infrastructure.Persistence; // Для AppDbContext
+using AnnouncementBot.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

@@ -1,4 +1,4 @@
-﻿using AnnouncementBot.Domain.Entities;
+using AnnouncementBot.Domain.Entities;
 
 namespace AnnouncementBot.Domain.Interfaces
 {
@@ -8,5 +8,6 @@ namespace AnnouncementBot.Domain.Interfaces
         Task<IReadOnlyList<Announcement>> GetByAdminIdAsync(long adminId, CancellationToken ct = default);
         Task<IReadOnlyList<Announcement>> GetAllAsync(CancellationToken ct = default);
         Task<IReadOnlyList<Announcement>> GetOlderThanAsync(DateTime date, CancellationToken ct = default);
+        Task DeleteRangeAsync(IEnumerable<Announcement> entities, CancellationToken ct = default);
     }
 }

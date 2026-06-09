@@ -23,5 +23,8 @@
     <ProjectReference Include="..\AnnouncementBot.Application\AnnouncementBot.Application.csproj" />
     <ProjectReference Include="..\AnnouncementBot.Infrastructure\AnnouncementBot.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Telegram\FSM\States\AdminRequestState.cs" />
+  </ItemGroup>
 
 </Project>

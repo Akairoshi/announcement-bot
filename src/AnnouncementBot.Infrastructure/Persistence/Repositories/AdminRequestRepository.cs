@@ -1,4 +1,4 @@
-﻿using AnnouncementBot.Domain.Entities;
+using AnnouncementBot.Domain.Entities;
 using AnnouncementBot.Domain.Enums;
 using AnnouncementBot.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -17,9 +17,11 @@ public class AdminRequestRepository : IAdminRequestRepository
     public async Task<AdminRequest?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await _context.AdminRequests.FirstOrDefaultAsync(a => a.Id == id, ct);
 
-    public async Task<IReadOnlyList<AdminRequest>> GetPendingAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<AdminRequest>> GetPendingAsync(int limit = 30, CancellationToken ct = default)
         => await _context.AdminRequests
             .Where(a => a.Status == AdminRequestStatus.Pending)
+            .OrderBy(a => a.CreatedAt)
+            .Take(limit)
             .ToListAsync(ct);
 
     public async Task<IReadOnlyList<AdminRequest>> GetByRequesterIdAsync(long requesterId, CancellationToken ct = default)

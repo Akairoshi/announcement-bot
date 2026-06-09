@@ -1,55 +1,63 @@
-﻿using AnnouncementBot.Domain.Interfaces;
 using AnnouncementBot.Presentation.Telegram.Commands.Interfaces;
-using AnnouncementBot.Presentation.Telegram.FSM;
+using AnnouncementBot.Domain.Interfaces;
+using AnnouncementBot.Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
+using Telegram.Bot.Types.Enums;
 
 namespace AnnouncementBot.Presentation.Telegram.Commands;
 
 public class MakeAnnouncementCommand : IBotCommand
 {
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ConversationStateStorage _stateStorage;
 
-    public string Command => "/make_announcement";
-
-    public MakeAnnouncementCommand(IServiceScopeFactory scopeFactory, ConversationStateStorage stateStorage)
+    public MakeAnnouncementCommand(IServiceScopeFactory scopeFactory)
     {
         _scopeFactory = scopeFactory;
-        _stateStorage = stateStorage;
     }
+
+    public string Command => "/make_announcement";
 
     public async Task ExecuteAsync(ITelegramBotClient bot, Message message, CancellationToken ct)
     {
         var userId = message.From!.Id;
-        _stateStorage.Clear(userId);
 
         using var scope = _scopeFactory.CreateScope();
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-        var accesses = await unitOfWork.AdminCategoryAccesses.GetByAdminIdAsync(userId, ct);
 
-        if (!accesses.Any())
+        var user = await unitOfWork.Users.GetByIdAsync(userId, ct);
+        if (user is null) return;
+
+        List<Domain.Entities.Category> categories;
+
+        if (user.Role == UserRole.SuperAdmin)
+        {
+            categories = (await unitOfWork.Categories.GetAllAsync(ct)).ToList();
+        }
+        else
+        {
+            var accesses = await unitOfWork.AdminCategoryAccesses.GetByAdminIdAsync(userId, ct);
+            var categoryIds = accesses.Select(a => a.CategoryId).ToHashSet();
+            var all = await unitOfWork.Categories.GetAllAsync(ct);
+            categories = all.Where(c => categoryIds.Contains(c.Id)).ToList();
+        }
+
+        if (!categories.Any())
         {
             await bot.SendMessage(message.Chat.Id, "❌ У вас нет доступных категорий.", cancellationToken: ct);
             return;
         }
 
-        var buttons = new List<InlineKeyboardButton[]>();
-        foreach (var access in accesses)
-        {
-            var category = await unitOfWork.Categories.GetByIdAsync(access.CategoryId, ct);
-            if (category is not null)
-                buttons.Add(new[]
-                {
-                    InlineKeyboardButton.WithCallbackData(category.Name, $"ann_cat:{category.Id}")
-                });
-        }
+        var buttons = categories
+            .Select(c => new[] { InlineKeyboardButton.WithCallbackData($"📁 {c.Name}", $"ann_cat:{c.Id}") })
+            .ToList();
 
         await bot.SendMessage(
-            message.Chat.Id,
-            "📂 Выберите категорию для объявления:",
+            chatId: message.Chat.Id,
+            text: "📢 <b>Создание объявления</b>\n\nШаг 1: Выберите категорию:\n\n<i>Для отмены введите /cancel</i>",
+            parseMode: ParseMode.Html,
             replyMarkup: new InlineKeyboardMarkup(buttons),
             cancellationToken: ct);
     }

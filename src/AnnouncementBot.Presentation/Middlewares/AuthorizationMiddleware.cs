@@ -1,4 +1,4 @@
-﻿using AnnouncementBot.Domain.Enums;
+using AnnouncementBot.Domain.Enums;
 using AnnouncementBot.Domain.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot;
@@ -29,8 +29,7 @@ public class AuthorizationMiddleware : IBotMiddleware
             return;
         }
 
-        // команды доступные всем — проверку не делаем
-        if (text.StartsWith("/start"))
+        if (text.StartsWith("/start") || text.StartsWith("/cancel"))
         {
             await next();
             return;
@@ -46,9 +45,17 @@ public class AuthorizationMiddleware : IBotMiddleware
             return;
         }
 
-        // команды только для Admin и SuperAdmin
-        var adminCommands = new[] { "/make_announcement", "/list_template", "/add_template", "/update_template", "/remove_template" };
-        var superAdminCommands = new[] { "/list_admin_request", "/list_admin", "/remove_admin", "/list_category", "/add_category", "/update_category", "/remove_category" };
+        var adminCommands = new[]
+        {
+            "/make_announcement", "/list_template", "/add_template",
+            "/update_template", "/remove_template"
+        };
+
+        var superAdminCommands = new[]
+        {
+            "/list_admin_request", "/list_admin", "/remove_admin",
+            "/list_category", "/add_category", "/update_category", "/remove_category"
+        };
 
         if (adminCommands.Any(c => text.StartsWith(c)) && user.Role == UserRole.User)
         {
