@@ -19,24 +19,29 @@ public class AuditLogBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest,
     {
         var response = await next();
 
-        Console.WriteLine($"[AUDIT] Request type: {typeof(TRequest).Name}, IsAuditable: {request is IAuditableRequest}");
+        if (request is not IAuditableRequest auditableRequest)
+            return response;
 
-        if (request is IAuditableRequest auditableRequest)
-        {
-            var entityId = response is Guid guid
-                ? guid.ToString()
-                : auditableRequest.GetEntityId();
+        if (request is IConditionalAudit conditional && !conditional.ShouldAudit(response))
+            return response;
 
-            var log = new AuditLog(
-                auditableRequest.ActorId,
-                auditableRequest.ActionName,
-                auditableRequest.EntityName,
-                entityId,
-                auditableRequest.Details);
+        var entityId = response is Guid guid
+            ? guid.ToString()
+            : auditableRequest.GetEntityId();
 
-            await _unitOfWork.AuditLogs.AddAsync(log, ct);
-            await _unitOfWork.SaveChangesAsync(ct);
-        }
+        var actionName = response is bool subscribed && auditableRequest.ActionName == "SubscriptionToggled"
+            ? (subscribed ? "CategorySubscribed" : "CategoryUnsubscribed")
+            : auditableRequest.ActionName;
+
+        var log = new AuditLog(
+            auditableRequest.ActorId,
+            actionName,
+            auditableRequest.EntityName,
+            entityId,
+            auditableRequest.Details);
+
+        await _unitOfWork.AuditLogs.AddAsync(log, ct);
+        await _unitOfWork.SaveChangesAsync(ct);
 
         return response;
     }

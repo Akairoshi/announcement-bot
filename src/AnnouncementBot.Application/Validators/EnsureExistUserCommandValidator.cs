@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using AnnouncementBot.Application.Commands.Users;
 
 namespace AnnouncementBot.Application.Validators;
