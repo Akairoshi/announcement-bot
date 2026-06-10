@@ -1,4 +1,4 @@
-﻿using AnnouncementBot.Domain.Enums;
+using AnnouncementBot.Domain.Enums;
 
 namespace AnnouncementBot.Domain.Entities
 {
@@ -20,24 +20,27 @@ namespace AnnouncementBot.Domain.Entities
             AnnouncementId = announcementId;
             UserId = userId;
             Status = DeliverySentStatus.Pending;
+            ErrorStatus = DeliveryErrorStatus.None;
         }
+
         public void MarkAsSent()
         {
             Status = DeliverySentStatus.Sent;
+            ErrorStatus = DeliveryErrorStatus.None;
             SentAt = DateTime.UtcNow;
             LastAttemptAt = DateTime.UtcNow;
         }
 
-        public void MarkAsFailed()
+        public void MarkAsFailed(DeliveryErrorStatus errorStatus)
         {
+            ErrorStatus = errorStatus;
+            LastAttemptAt = DateTime.UtcNow;
+
+            if (errorStatus == DeliveryErrorStatus.NetworkError)
+                return;
+
             RetryCount++;
             Status = DeliverySentStatus.Failed;
-            LastAttemptAt = DateTime.UtcNow;
         }
-        public void MarkAsFailedStatus(int status)
-        {
-            ErrorStatus = (DeliveryErrorStatus)status;
-        }
-
     }
 }

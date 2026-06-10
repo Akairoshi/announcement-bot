@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.Enums;
 
 namespace AnnouncementBot.Infrastructure.BackgroundServices;
@@ -63,33 +64,66 @@ public class AnnouncementDeliveryWorker : BackgroundService
             .Where(a => announcementIds.Contains(a.Id))
             .ToDictionary(a => a.Id);
 
+        var categoryIds = announcementsCache.Values.Select(a => a.CategoryId).Distinct().ToHashSet();
+        var allCategories = await unitOfWork.Categories.GetAllAsync(ct);
+        var categoriesCache = allCategories
+            .Where(c => categoryIds.Contains(c.Id))
+            .ToDictionary(c => c.Id);
+
         foreach (var delivery in pendingDeliveries)
         {
             if (!announcementsCache.TryGetValue(delivery.AnnouncementId, out var announcement))
             {
                 _logger.LogWarning("Объявление {Id} не найдено, пропускаем.", delivery.AnnouncementId);
-                delivery.MarkAsFailed();
+                delivery.MarkAsFailed(DeliveryErrorStatus.NotFound);
                 continue;
             }
 
+            var categoryName = categoriesCache.TryGetValue(announcement.CategoryId, out var category)
+                ? category.Name
+                : "Без категории";
+
             try
             {
-                var category = await unitOfWork.Categories.GetByIdAsync(announcement.CategoryId, ct);
                 await _botClient.SendMessage(
                     chatId: delivery.UserId,
-                    text: $"📢 <b>Объявление - {category?.Name}</b>\n\n{announcement.Text}",
+                    text: $"📢 <b>{categoryName}</b>\n\n{announcement.Text}",
                     parseMode: ParseMode.Html,
                     cancellationToken: ct);
 
                 delivery.MarkAsSent();
             }
-            catch (Exception ex)
+            catch (ApiRequestException apiEx)
             {
-                _logger.LogError(ex, "Ошибка отправки объявления {AnnId} пользователю {UserId}.",
-                    delivery.AnnouncementId, delivery.UserId);
+                var errorStatus = apiEx.ErrorCode switch
+                {
+                    400 => DeliveryErrorStatus.BadRequest,
+                    401 => DeliveryErrorStatus.Unauthorized,
+                    403 => DeliveryErrorStatus.Forbidden,
+                    404 => DeliveryErrorStatus.NotFound,
+                    429 => DeliveryErrorStatus.TooManyRequests,
+                    500 => DeliveryErrorStatus.InternalServerError,
+                    _ => DeliveryErrorStatus.BadRequest
+                };
 
-                delivery.MarkAsFailed();
-                delivery.MarkAsFailedStatus(ex.HResult);
+                _logger.LogWarning(
+                    "Telegram ошибка [{Code}] для пользователя {UserId}: {Message}",
+                    apiEx.ErrorCode, delivery.UserId, apiEx.Message);
+
+                delivery.MarkAsFailed(errorStatus);
+            }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogWarning(
+                    "Сетевая ошибка для пользователя {UserId}: {Message}",
+                    delivery.UserId, httpEx.Message);
+
+                delivery.MarkAsFailed(DeliveryErrorStatus.NetworkError);
+            }
+            catch (TaskCanceledException)
+            {
+                _logger.LogWarning("Таймаут при отправке пользователю {UserId}.", delivery.UserId);
+                delivery.MarkAsFailed(DeliveryErrorStatus.NetworkError);
             }
 
             await Task.Delay(50, ct);
