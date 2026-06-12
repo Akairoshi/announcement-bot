@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AnnouncementBot.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260609144055_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260610073813_AddDeliveryErrorStatus")]
+    partial class AddDeliveryErrorStatus
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

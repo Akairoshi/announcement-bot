@@ -1,5 +1,4 @@
 using AnnouncementBot.Domain.Entities;
-using AnnouncementBot.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -19,7 +18,6 @@ public class DeliveryStatusConfiguration : IEntityTypeConfiguration<DeliveryStat
 
         builder.Property(d => d.ErrorStatus)
             .HasConversion<int>()
-            .HasDefaultValue(DeliveryErrorStatus.None)
             .IsRequired();
 
         builder.Property(d => d.RetryCount)

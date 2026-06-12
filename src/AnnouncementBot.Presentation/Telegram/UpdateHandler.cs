@@ -1,4 +1,4 @@
-﻿using AnnouncementBot.Presentation.Middlewares;
+using AnnouncementBot.Presentation.Middlewares;
 using AnnouncementBot.Presentation.Telegram.Callbacks.Interfaces;
 using AnnouncementBot.Presentation.Telegram.Commands.Interfaces;
 using AnnouncementBot.Presentation.Telegram.FSM;
@@ -15,6 +15,7 @@ public class UpdateHandler : IUpdateHandler
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<UpdateHandler> _logger;
     private readonly ConversationStateStorage _stateStorage;
+    private bool _isConnectionDown = false;
 
     public UpdateHandler(
         IServiceProvider serviceProvider,
@@ -28,6 +29,12 @@ public class UpdateHandler : IUpdateHandler
 
     public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken ct)
     {
+        if (_isConnectionDown)
+        {
+            _logger.LogInformation("Соединение с Telegram восстановлено.");
+            _isConnectionDown = false;
+        }
+
         using var scope = _serviceProvider.CreateScope();
         var commands = scope.ServiceProvider.GetServices<IBotCommand>();
         var middlewares = scope.ServiceProvider.GetServices<IBotMiddleware>();
@@ -82,9 +89,7 @@ public class UpdateHandler : IUpdateHandler
         {
             var activeState = _stateStorage.Get(userId);
             if (activeState is not null)
-            {
                 _stateStorage.Clear(userId);
-            }
 
             var cancelCommand = commands.FirstOrDefault(c => c.Command == "/cancel");
             if (cancelCommand is not null)
@@ -145,13 +150,18 @@ public class UpdateHandler : IUpdateHandler
 
     public Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken ct)
     {
-        _logger.LogError(exception, "Ошибка Long Polling");
+        _logger.LogError("Ошибка Long Polling: {Message}", exception.Message);
         return Task.CompletedTask;
     }
 
     public Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, HandleErrorSource source, CancellationToken ct)
     {
-        _logger.LogError(exception, "Ошибка Telegram");
+        if (!_isConnectionDown)
+        {
+            _isConnectionDown = true;
+            _logger.LogError("Соединение с Telegram потеряно: {Message}", exception.Message);
+        }
+
         return Task.CompletedTask;
     }
 }
