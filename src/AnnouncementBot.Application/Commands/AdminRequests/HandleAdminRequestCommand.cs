@@ -11,7 +11,7 @@ public record HandleAdminRequestCommand(
     long SuperAdminId,
     bool IsApproved,
     string? CategoryName = null
-) : IRequest, IAuditableRequest
+) : IRequest<Unit>, IAuditableRequest
 {
     public long ActorId => SuperAdminId;
     public string ActionName => IsApproved ? "Одобрение заявки в админы" : "Отклонение заявки в админы";
@@ -22,7 +22,7 @@ public record HandleAdminRequestCommand(
         : "Заявка отклонена супер-админом.";
 }
 
-public class HandleAdminRequestCommandHandler : IRequestHandler<HandleAdminRequestCommand>
+public class HandleAdminRequestCommandHandler : IRequestHandler<HandleAdminRequestCommand, Unit>
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -31,7 +31,7 @@ public class HandleAdminRequestCommandHandler : IRequestHandler<HandleAdminReque
         _unitOfWork = unitOfWork;
     }
 
-    public async Task Handle(HandleAdminRequestCommand request, CancellationToken ct)
+    public async Task<Unit> Handle(HandleAdminRequestCommand request, CancellationToken ct)
     {
         var adminRequest = await _unitOfWork.AdminRequests.GetByIdAsync(request.RequestId, ct);
         if (adminRequest is null)
@@ -111,5 +111,7 @@ public class HandleAdminRequestCommandHandler : IRequestHandler<HandleAdminReque
 
         await _unitOfWork.AdminRequests.UpdateAsync(adminRequest, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        return Unit.Value;
     }
 }

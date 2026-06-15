@@ -1,4 +1,4 @@
-﻿using AnnouncementBot.Domain.Entities;
+using AnnouncementBot.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -21,7 +21,8 @@ public class AnnouncementConfiguration : IEntityTypeConfiguration<Announcement>
         builder.HasOne<Category>()
             .WithMany()
             .HasForeignKey(a => a.CategoryId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasOne<Template>()
             .WithMany()

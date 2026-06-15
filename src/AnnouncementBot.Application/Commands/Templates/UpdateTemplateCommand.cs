@@ -5,7 +5,7 @@ using MediatR;
 namespace AnnouncementBot.Application.Commands.Templates;
 
 public record UpdateTemplateCommand(Guid TemplateId, string? NewName, string? NewText, long ActorId = 0)
-    : IRequest, IAuditableRequest
+    : IRequest<Unit>, IAuditableRequest
 {
     long IAuditableRequest.ActorId => ActorId;
     public string ActionName => "TemplateUpdated";
@@ -14,7 +14,7 @@ public record UpdateTemplateCommand(Guid TemplateId, string? NewName, string? Ne
     public string GetEntityId() => TemplateId.ToString();
 }
 
-public class UpdateTemplateCommandHandler : IRequestHandler<UpdateTemplateCommand>
+public class UpdateTemplateCommandHandler : IRequestHandler<UpdateTemplateCommand, Unit>
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -23,7 +23,7 @@ public class UpdateTemplateCommandHandler : IRequestHandler<UpdateTemplateComman
         _unitOfWork = unitOfWork;
     }
 
-    public async Task Handle(UpdateTemplateCommand request, CancellationToken ct)
+    public async Task<Unit> Handle(UpdateTemplateCommand request, CancellationToken ct)
     {
         var template = await _unitOfWork.Templates.GetByIdAsync(request.TemplateId, ct);
 
@@ -38,5 +38,7 @@ public class UpdateTemplateCommandHandler : IRequestHandler<UpdateTemplateComman
 
         await _unitOfWork.Templates.UpdateAsync(template, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        return Unit.Value;
     }
 }

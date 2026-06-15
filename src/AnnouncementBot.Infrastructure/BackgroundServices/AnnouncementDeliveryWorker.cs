@@ -15,7 +15,7 @@ public class AnnouncementDeliveryWorker : BackgroundService
     private readonly ITelegramBotClient _botClient;
     private readonly ILogger<AnnouncementDeliveryWorker> _logger;
     private const int MaxRetryCount = 3;
-    private static readonly TimeSpan Interval = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan Interval = TimeSpan.FromMinutes(3);
     private bool _wasNetworkDown = false;
 
     public AnnouncementDeliveryWorker(
@@ -71,7 +71,11 @@ public class AnnouncementDeliveryWorker : BackgroundService
             .Where(a => announcementIds.Contains(a.Id))
             .ToDictionary(a => a.Id);
 
-        var categoryIds = announcementsCache.Values.Select(a => a.CategoryId).Distinct().ToHashSet();
+        var categoryIds = announcementsCache.Values
+            .Where(a => a.CategoryId.HasValue)
+            .Select(a => a.CategoryId!.Value)
+            .Distinct()
+            .ToHashSet();
         var allCategories = await unitOfWork.Categories.GetAllAsync(ct);
         var categoriesCache = allCategories
             .Where(c => categoryIds.Contains(c.Id))
@@ -89,7 +93,7 @@ public class AnnouncementDeliveryWorker : BackgroundService
                 continue;
             }
 
-            var categoryName = categoriesCache.TryGetValue(announcement.CategoryId, out var category)
+            var categoryName = announcement.CategoryId.HasValue && categoriesCache.TryGetValue(announcement.CategoryId.Value, out var category)
                 ? category.Name
                 : "Без категории";
 

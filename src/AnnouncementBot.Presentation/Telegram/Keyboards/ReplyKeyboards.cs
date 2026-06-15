@@ -1,10 +1,25 @@
-﻿using Telegram.Bot.Types.ReplyMarkups;
+﻿using AnnouncementBot.Domain.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace AnnouncementBot.Presentation.Telegram.Keyboards;
 
 public static class ReplyKeyboards
 {
-    public static ReplyKeyboardMarkup GetUserMainMenu()
+    public static ReplyKeyboardMarkup GetMainKeyboard(UserRole role)
+    {
+        switch (role)
+        {
+            case UserRole.User:
+                return GetUserMainMenu();
+            case UserRole.Admin:
+                return GetAdminMainMenu();
+            case UserRole.SuperAdmin:
+                return GetSuperAdminMainMenu();
+            default:
+                throw new ArgumentOutOfRangeException(nameof(role), role, null);
+        }
+    }
+    private static ReplyKeyboardMarkup GetUserMainMenu()
     {
         return new ReplyKeyboardMarkup(new[]
         {
@@ -17,7 +32,7 @@ public static class ReplyKeyboards
         };
     }
 
-    public static ReplyKeyboardMarkup GetAdminMainMenu()
+    private static ReplyKeyboardMarkup GetAdminMainMenu()
     {
         return new ReplyKeyboardMarkup(new[]
         {
@@ -32,7 +47,7 @@ public static class ReplyKeyboards
         };
     }
 
-    public static ReplyKeyboardMarkup GetSuperAdminMainMenu()
+    private static ReplyKeyboardMarkup GetSuperAdminMainMenu()
     {
         return new ReplyKeyboardMarkup(new[]
         {

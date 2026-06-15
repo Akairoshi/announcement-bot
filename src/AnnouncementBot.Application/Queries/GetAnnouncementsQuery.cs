@@ -1,4 +1,4 @@
-﻿using AnnouncementBot.Application.DTOs;
+using AnnouncementBot.Application.DTOs;
 using AnnouncementBot.Domain.Enums;
 using AnnouncementBot.Domain.Interfaces;
 using MediatR;
@@ -29,8 +29,15 @@ public class GetAnnouncementsQueryHandler : IRequestHandler<GetAnnouncementsQuer
 
         foreach (var a in announcements)
         {
-            var category = await _unitOfWork.Categories.GetByIdAsync(a.CategoryId, ct);
-            result.Add(new AnnouncementDto(a.Id, a.Text, category?.Name ?? "Неизвестно", a.CreatedAt));
+            var categoryName = "Удалённая категория";
+            if (a.CategoryId.HasValue)
+            {
+                var category = await _unitOfWork.Categories.GetByIdAsync(a.CategoryId.Value, ct);
+                if (category is not null)
+                    categoryName = category.Name;
+            }
+
+            result.Add(new AnnouncementDto(a.Id, a.Text, categoryName, a.CreatedAt));
         }
 
         return result.OrderByDescending(a => a.CreatedAt).ToList();

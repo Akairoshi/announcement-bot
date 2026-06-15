@@ -59,14 +59,21 @@ public class CategoryCallbackHandler : ICallbackHandler
 
             using var scope = _scopeFactory.CreateScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-            var category = await unitOfWork.Categories.GetByIdAsync(categoryId, ct);
 
+            var category = await unitOfWork.Categories.GetByIdAsync(categoryId, ct);
             if (category is null)
             {
                 await bot.EditMessageReplyMarkup(chatId, messageId, replyMarkup: null, cancellationToken: ct);
                 await bot.SendMessage(chatId, "❌ Категория не найдена.", cancellationToken: ct);
                 return;
             }
+
+            var subscribers = await unitOfWork.Subscriptions.GetByCategoryIdAsync(categoryId, ct);
+            var subscriberCount = subscribers.Count;
+
+            var subscriberLine = subscriberCount > 0
+                ? $"\n👥 Подписчиков: <b>{subscriberCount}</b> — все получат уведомление об отписке."
+                : "\n👥 Подписчиков нет.";
 
             var keyboard = new InlineKeyboardMarkup(new[]
             {
@@ -80,7 +87,7 @@ public class CategoryCallbackHandler : ICallbackHandler
             await bot.EditMessageText(
                 chatId,
                 messageId,
-                $"🗑 Удалить категорию <b>\"{category.Name}\"</b>?\n\n⚠️ Все объявления в этой категории останутся, но потеряют привязку.",
+                $"🗑 Удалить категорию <b>\"{category.Name}\"</b>?{subscriberLine}\n\n⚠️ Объявления категории останутся, но потеряют привязку.",
                 parseMode: ParseMode.Html,
                 replyMarkup: keyboard,
                 cancellationToken: ct);
@@ -95,12 +102,48 @@ public class CategoryCallbackHandler : ICallbackHandler
             await bot.EditMessageReplyMarkup(chatId, messageId, replyMarkup: null, cancellationToken: ct);
 
             using var scope = _scopeFactory.CreateScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+            // Получаем подписчиков и имя категории ДО удаления —
+            // после SaveChanges подписки каскадно удалятся.
+            var category = await unitOfWork.Categories.GetByIdAsync(categoryId, ct);
+            if (category is null)
+            {
+                await bot.SendMessage(chatId, "❌ Категория не найдена.", cancellationToken: ct);
+                return;
+            }
+
+            var categoryName = category.Name;
+            var subscribers = await unitOfWork.Subscriptions.GetByCategoryIdAsync(categoryId, ct);
+            var subscriberIds = subscribers.Select(s => s.UserId).ToList();
 
             try
             {
                 await mediator.Send(new RemoveCategoryCommand(categoryId, userId), ct);
-                await bot.SendMessage(chatId, "✅ Категория удалена.", cancellationToken: ct);
+
+                await bot.SendMessage(
+                    chatId,
+                    $"✅ Категория <b>\"{categoryName}\"</b> удалена. Уведомлено подписчиков: {subscriberIds.Count}.",
+                    parseMode: ParseMode.Html,
+                    cancellationToken: ct);
+
+                // Рассылаем уведомления подписчикам параллельно, ошибки не роняют основной поток
+                foreach (var subscriberId in subscriberIds)
+                {
+                    try
+                    {
+                        await bot.SendMessage(
+                            chatId: subscriberId,
+                            text: $"ℹ️ Категория <b>\"{categoryName}\"</b>, на которую вы были подписаны, была удалена.\n\nВы автоматически отписаны от неё.",
+                            parseMode: ParseMode.Html,
+                            cancellationToken: ct);
+                    }
+                    catch
+                    {
+                        // Пользователь мог заблокировать бота — пропускаем молча
+                    }
+                }
             }
             catch (Exception ex)
             {

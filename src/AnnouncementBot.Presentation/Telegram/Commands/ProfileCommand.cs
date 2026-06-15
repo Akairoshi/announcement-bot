@@ -31,6 +31,7 @@ public class ProfileCommand : IBotCommand
         var user = await unitOfWork.Users.GetByIdAsync(userId, ct);
         if (user is null) return;
 
+        ReplyKeyboardMarkup mainMenuKeyboard = ReplyKeyboards.GetMainKeyboard(user!.Role);
         string roleName = user.Role switch
         {
             UserRole.User => "Пользователь 👤",
@@ -39,12 +40,6 @@ public class ProfileCommand : IBotCommand
             _ => "Неизвестно"
         };
 
-        ReplyKeyboardMarkup mainMenuKeyboard = user.Role switch
-        {
-            UserRole.SuperAdmin => ReplyKeyboards.GetSuperAdminMainMenu(),
-            UserRole.Admin => ReplyKeyboards.GetAdminMainMenu(),
-            _ => ReplyKeyboards.GetUserMainMenu()
-        };
 
         string plate;
 

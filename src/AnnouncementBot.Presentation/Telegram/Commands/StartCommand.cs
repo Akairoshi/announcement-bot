@@ -28,12 +28,7 @@ public class StartCommand : IBotCommand
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
         var user = await unitOfWork.Users.GetByIdAsync(userId, ct);
 
-        ReplyKeyboardMarkup mainMenuKeyboard = user.Role switch
-        {
-            UserRole.SuperAdmin => ReplyKeyboards.GetSuperAdminMainMenu(),
-            UserRole.Admin => ReplyKeyboards.GetAdminMainMenu(),
-            _ => ReplyKeyboards.GetUserMainMenu()
-        };
+        ReplyKeyboardMarkup mainMenuKeyboard = ReplyKeyboards.GetMainKeyboard(user!.Role);
         var welcomeText = "👋 Добро пожаловать в Бот объявлений!\n";
 
         await bot.SendMessage(

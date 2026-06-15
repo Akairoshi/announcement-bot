@@ -38,7 +38,6 @@ public class ListAnnouncementCommand : IBotCommand
             showStatistic = true;
             announcements = await unitOfWork.Announcements.GetAllAsync(ct);
             allCategories = await unitOfWork.Categories.GetAllAsync(ct);
-
         }
         else if (user.Role == UserRole.Admin)
         {
@@ -48,7 +47,7 @@ public class ListAnnouncementCommand : IBotCommand
 
             allCategories = await unitOfWork.Categories.GetAllAsync(ct);
             var allAnnouncements = await unitOfWork.Announcements.GetAllAsync(ct);
-            announcements = allAnnouncements.Where(a => categoryIds.Contains(a.CategoryId)).ToList();
+            announcements = allAnnouncements.Where(a => a.CategoryId.HasValue && categoryIds.Contains(a.CategoryId.Value)).ToList();
         }
         else
         {
@@ -66,7 +65,7 @@ public class ListAnnouncementCommand : IBotCommand
 
             allCategories = await unitOfWork.Categories.GetAllAsync(ct);
             var allAnnouncements = await unitOfWork.Announcements.GetAllAsync(ct);
-            announcements = allAnnouncements.Where(a => categoryIds.Contains(a.CategoryId)).ToList();
+            announcements = allAnnouncements.Where(a => a.CategoryId.HasValue && categoryIds.Contains(a.CategoryId.Value)).ToList();
         }
 
         var recent = announcements
@@ -88,24 +87,18 @@ public class ListAnnouncementCommand : IBotCommand
         var responseText = "<b>📬 Последние объявления:</b>\n\n";
         foreach (var ann in recent)
         {
-            var categoryName = categoryMap.TryGetValue(ann.CategoryId, out var name)
+            var categoryName = ann.CategoryId.HasValue && categoryMap.TryGetValue(ann.CategoryId.Value, out var name)
                 ? name
-                : "Неизвестно";
+                : "Удалённая категория";
 
-            var successCount = ann.DeliveryStatuses.Count(x =>
-                x.Status == DeliverySentStatus.Sent);
-
-            var failedCount = ann.DeliveryStatuses.Count(x =>
-                x.Status == DeliverySentStatus.Failed);
-
-            var pendingCount = ann.DeliveryStatuses.Count(x =>
-                x.Status == DeliverySentStatus.Pending);
+            var successCount = ann.DeliveryStatuses.Count(x => x.Status == DeliverySentStatus.Sent);
+            var failedCount = ann.DeliveryStatuses.Count(x => x.Status == DeliverySentStatus.Failed);
+            var pendingCount = ann.DeliveryStatuses.Count(x => x.Status == DeliverySentStatus.Pending);
 
             responseText +=
                 $"<b>📁</b> {categoryName}\n" +
                 $"<b>📅</b> {ann.CreatedAt:dd.MM.yyyy HH:mm}\n\n" +
-                (showStatistic ? $"<b>📊 Статистика:</b>\n" + $"✅ {successCount} | ❌ {failedCount} | ⏳ {pendingCount}\n\n" : string.Empty) +
-
+                (showStatistic ? $"<b>📊 Статистика:</b>\n✅ {successCount} | ❌ {failedCount} | ⏳ {pendingCount}\n\n" : string.Empty) +
                 $"{ann.Text}\n" +
                 $"──────────────\n\n";
         }

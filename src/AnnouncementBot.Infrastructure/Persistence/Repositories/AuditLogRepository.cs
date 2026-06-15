@@ -12,6 +12,6 @@ namespace AnnouncementBot.Infrastructure.Persistence.Repositories
             _context = context;
         }
         public async Task AddAsync(AuditLog entity, CancellationToken ct = default)
-            => await _context.AddAsync(entity, ct);
+            => await _context.AuditLogs.AddAsync(entity, ct);
     }
 }

@@ -6,7 +6,7 @@ using MediatR;
 namespace AnnouncementBot.Application.Commands.Users;
 
 public record ChangeUserRoleCommand(long UserId, UserRole Role, long ActorId = 0)
-    : IRequest, IAuditableRequest
+    : IRequest<Unit>, IAuditableRequest
 {
     long IAuditableRequest.ActorId => ActorId;
     public string ActionName => Role == UserRole.Admin ? "AdminAppointed" : "AdminRemoved";
@@ -15,7 +15,7 @@ public record ChangeUserRoleCommand(long UserId, UserRole Role, long ActorId = 0
     public string GetEntityId() => UserId.ToString();
 }
 
-public class ChangeUserRoleCommandHandler : IRequestHandler<ChangeUserRoleCommand>
+public class ChangeUserRoleCommandHandler : IRequestHandler<ChangeUserRoleCommand, Unit>
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -24,7 +24,7 @@ public class ChangeUserRoleCommandHandler : IRequestHandler<ChangeUserRoleComman
         _unitOfWork = unitOfWork;
     }
 
-    public async Task Handle(ChangeUserRoleCommand request, CancellationToken ct)
+    public async Task<Unit> Handle(ChangeUserRoleCommand request, CancellationToken ct)
     {
         var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, ct);
 
@@ -35,5 +35,7 @@ public class ChangeUserRoleCommandHandler : IRequestHandler<ChangeUserRoleComman
 
         await _unitOfWork.Users.UpdateAsync(user, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        return Unit.Value;
     }
 }

@@ -5,7 +5,7 @@ using MediatR;
 namespace AnnouncementBot.Application.Commands.Categories;
 
 public record RemoveCategoryCommand(Guid CategoryId, long ActorId = 0)
-    : IRequest, IAuditableRequest
+    : IRequest<Unit>, IAuditableRequest
 {
     long IAuditableRequest.ActorId => ActorId;
     public string ActionName => "CategoryDeleted";
@@ -14,7 +14,7 @@ public record RemoveCategoryCommand(Guid CategoryId, long ActorId = 0)
     public string GetEntityId() => CategoryId.ToString();
 }
 
-public class RemoveCategoryCommandHandler : IRequestHandler<RemoveCategoryCommand>
+public class RemoveCategoryCommandHandler : IRequestHandler<RemoveCategoryCommand, Unit>
 {
     private readonly IUnitOfWork _unitOfWork;
 
@@ -23,7 +23,7 @@ public class RemoveCategoryCommandHandler : IRequestHandler<RemoveCategoryComman
         _unitOfWork = unitOfWork;
     }
 
-    public async Task Handle(RemoveCategoryCommand request, CancellationToken ct)
+    public async Task<Unit> Handle(RemoveCategoryCommand request, CancellationToken ct)
     {
         var category = await _unitOfWork.Categories.GetByIdAsync(request.CategoryId, ct);
 
@@ -32,5 +32,7 @@ public class RemoveCategoryCommandHandler : IRequestHandler<RemoveCategoryComman
 
         await _unitOfWork.Categories.DeleteAsync(category, ct);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        return Unit.Value;
     }
 }

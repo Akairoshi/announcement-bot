@@ -84,7 +84,7 @@ namespace AnnouncementBot.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CategoryId")
+                    b.Property<Guid?>("CategoryId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -318,8 +318,7 @@ namespace AnnouncementBot.Infrastructure.Migrations
                     b.HasOne("AnnouncementBot.Domain.Entities.Category", null)
                         .WithMany()
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("AnnouncementBot.Domain.Entities.User", null)
                         .WithMany("Announcements")

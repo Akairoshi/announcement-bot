@@ -1,12 +1,15 @@
+using AnnouncementBot.Domain.Entities;
 using AnnouncementBot.Presentation.Middlewares;
 using AnnouncementBot.Presentation.Telegram.Callbacks.Interfaces;
 using AnnouncementBot.Presentation.Telegram.Commands.Interfaces;
 using AnnouncementBot.Presentation.Telegram.FSM;
+using AnnouncementBot.Presentation.Telegram.Keyboards;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace AnnouncementBot.Presentation.Telegram;
 
