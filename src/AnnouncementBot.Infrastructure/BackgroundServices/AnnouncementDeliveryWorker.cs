@@ -153,14 +153,12 @@ public class AnnouncementDeliveryWorker : BackgroundService
                 await unitOfWork.DeliveryStatuses.UpdateAsync(delivery, ct);
             }
 
-            // Небольшая задержка между отправками для соблюдения лимитов Telegram API
             await Task.Delay(50, ct);
         }
 
         if (hadNetworkErrorInBatch)
             _wasNetworkDown = true;
 
-        // Фиксируем все изменения статусов в БД за один вызов
         await unitOfWork.SaveChangesAsync(ct);
         _logger.LogInformation("[СИСТЕМА] Обработка пачки завершена | Изменения сохранены в БД.");
     }

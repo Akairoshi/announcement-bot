@@ -1,7 +1,9 @@
 using AnnouncementBot.Domain.Interfaces;
+using AnnouncementBot.Infrastructure.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace AnnouncementBot.Infrastructure.BackgroundServices;
 
@@ -9,20 +11,24 @@ public class AnnouncementCleanerWorker : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<AnnouncementCleanerWorker> _logger;
-    private static readonly TimeSpan Interval = TimeSpan.FromHours(24);
+    private readonly TimeSpan _interval;
     private const int RetentionDays = 30;
 
     public AnnouncementCleanerWorker(
         IServiceProvider serviceProvider,
-        ILogger<AnnouncementCleanerWorker> logger)
+        ILogger<AnnouncementCleanerWorker> logger,
+        IOptions<BotConfiguration> botOptions)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
+
+        var minutes = int.TryParse(botOptions.Value.SenderInterval, out var interval) ? interval : 3;
+        _interval = TimeSpan.FromMinutes(minutes);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("[СИСТЕМА] Воркер очистки объявлений запущен.");
+        _logger.LogInformation("[СИСТЕМА] Воркер очистки объявлений запущен. Интервал: {Minutes} мин.", _interval.TotalMinutes);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -35,7 +41,7 @@ public class AnnouncementCleanerWorker : BackgroundService
                 _logger.LogError(ex, "[ОШИБКА] Сбой в цикле очистки объявлений.");
             }
 
-            await Task.Delay(Interval, stoppingToken);
+            await Task.Delay(_interval, stoppingToken);
         }
     }
 

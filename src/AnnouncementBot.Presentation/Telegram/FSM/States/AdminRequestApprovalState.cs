@@ -1,6 +1,5 @@
 using AnnouncementBot.Application.Commands.AdminRequests;
 using AnnouncementBot.Domain.Interfaces;
-using AnnouncementBot.Presentation.Telegram.FSM;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot;
