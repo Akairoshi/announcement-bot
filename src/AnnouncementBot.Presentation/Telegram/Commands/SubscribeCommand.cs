@@ -38,7 +38,7 @@ public class SubscribeCommand : IBotCommand
             var sub = await unitOfWork.Subscriptions.GetByUserAndCategoryAsync(userId, c.Id, ct);
             var isSubscribed = sub is not null;
 
-            var buttonText = isSubscribed ? $"✅ {c.Name}" : $"🔔 {c.Name}";
+            var buttonText = isSubscribed ? $"🔔 {c.Name}" : $"{c.Name}";
 
             buttons.Add(new[] { InlineKeyboardButton.WithCallbackData(buttonText, $"subscribe:{c.Id}") });
         }

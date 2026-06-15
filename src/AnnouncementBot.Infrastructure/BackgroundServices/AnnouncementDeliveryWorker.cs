@@ -1,8 +1,10 @@
 using AnnouncementBot.Domain.Enums;
 using AnnouncementBot.Domain.Interfaces;
+using AnnouncementBot.Infrastructure.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.Enums;
@@ -15,17 +17,21 @@ public class AnnouncementDeliveryWorker : BackgroundService
     private readonly ITelegramBotClient _botClient;
     private readonly ILogger<AnnouncementDeliveryWorker> _logger;
     private const int MaxRetryCount = 3;
-    private static readonly TimeSpan Interval = TimeSpan.FromMinutes(3);
+    private readonly TimeSpan Interval;
     private bool _wasNetworkDown = false;
 
     public AnnouncementDeliveryWorker(
         IServiceProvider serviceProvider,
         ITelegramBotClient botClient,
-        ILogger<AnnouncementDeliveryWorker> logger)
+        ILogger<AnnouncementDeliveryWorker> logger,
+        IOptions<BotConfiguration> botOptions)
     {
         _serviceProvider = serviceProvider;
         _botClient = botClient;
         _logger = logger;
+
+        var minutes = int.TryParse(botOptions.Value.SenderInterval, out var interval) ? interval : 3;
+        Interval = TimeSpan.FromMinutes(minutes);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,7 +49,7 @@ public class AnnouncementDeliveryWorker : BackgroundService
                 _logger.LogError("[ОШИБКА] Критический сбой в цикле рассылки | {Message}", ex.Message);
             }
 
-            _logger.LogInformation("[СИСТЕМА] Ожидание следующего цикла | Интервал: {Minutes} мин.", Interval.TotalMinutes);
+            _logger.LogInformation("[СИСТЕМА] Ожидание следующего цикла | Интервал: {Minutes} мин [{Time}].", Interval.TotalMinutes, (DateTime.UtcNow + Interval));
             await Task.Delay(Interval, stoppingToken);
         }
     }
@@ -65,7 +71,6 @@ public class AnnouncementDeliveryWorker : BackgroundService
 
         _logger.LogInformation("[СИСТЕМА] Найдено записей для отправки | Количество: {Count}", pendingDeliveries.Count);
 
-        // Оптимизация: Загружаем из базы только то, что требуется для текущей пачки
         var announcementIds = pendingDeliveries.Select(d => d.AnnouncementId).Distinct().ToList();
         var allAnnouncements = await unitOfWork.Announcements.GetAllAsync(ct);
         var announcementsCache = allAnnouncements

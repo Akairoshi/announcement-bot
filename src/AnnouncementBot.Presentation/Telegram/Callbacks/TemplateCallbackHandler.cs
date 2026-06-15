@@ -46,7 +46,7 @@ public class TemplateCallbackHandler : ICallbackHandler
 
             await bot.SendMessage(
                 chatId,
-                "📝 <b>Редактирование шаблона</b>\n\nВведите новое название шаблона:\n\nДля отмены введите /cancel",
+                "📝 <b>Редактирование шаблона</b>\n\nВведите новое название шаблона:\nДля пропуска изменения введите /skip\n\nДля отмены введите /cancel",
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
 

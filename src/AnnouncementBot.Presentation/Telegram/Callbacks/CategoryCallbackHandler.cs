@@ -46,7 +46,7 @@ public class CategoryCallbackHandler : ICallbackHandler
 
             await bot.SendMessage(
                 chatId,
-                "📂 <b>Редактирование категории</b>\n\nВведите новое название категории:\n\nДля отмены введите /cancel",
+                "📂 <b>Редактирование категории</b>\n\nВведите новое название категории:\nДля пропуска изменения введите /skip\n\nДля отмены введите /cancel",
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
 
@@ -138,7 +138,6 @@ public class CategoryCallbackHandler : ICallbackHandler
                     }
                     catch
                     {
-                        // Игнорируем ошибки доставки (например, бот заблокирован)
                     }
                 }
             }

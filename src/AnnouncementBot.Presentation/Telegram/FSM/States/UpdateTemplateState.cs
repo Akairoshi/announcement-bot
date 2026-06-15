@@ -34,10 +34,14 @@ public class UpdateTemplateState : IConversationState
     {
         var input = message.Text?.Trim();
 
-        if (string.IsNullOrWhiteSpace(input) || input.StartsWith('/'))
+        if (string.IsNullOrWhiteSpace(input))
         {
-            await bot.SendMessage(message.Chat.Id, "⚠️ Введите корректное текстовое значение.\n\nДля отмены введите /cancel", cancellationToken: ct);
+            await bot.SendMessage(message.Chat.Id, "⚠️ Введите корректное текстовое значение.", cancellationToken: ct);
             return;
+        }
+        if(input == "/skip")
+        {
+            input = null;
         }
 
         if (_step == Step.WaitingName)
@@ -47,7 +51,7 @@ public class UpdateTemplateState : IConversationState
 
             await bot.SendMessage(
                 message.Chat.Id,
-                $"📝 Новое название: <b>{_newName}</b>\n\nТеперь введите новый текст шаблона:\n\nДля отмены введите /cancel",
+                $"📝 Новое название: <b>{_newName}</b>\n\nТеперь введите новый текст шаблона:\nДля пропуска изменения введите /skip\n\nДля отмены введите /cancel",
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
 
