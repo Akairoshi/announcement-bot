@@ -32,7 +32,7 @@ public class ListAdminRequestsCommand : IBotCommand
         {
             await bot.SendMessage(
                 message.Chat.Id,
-                "📥 <b>Активных заявок нет.</b>",
+                "📥 Активные заявки отсутствуют.",
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
             return;
@@ -40,7 +40,7 @@ public class ListAdminRequestsCommand : IBotCommand
 
         await bot.SendMessage(
             message.Chat.Id,
-            $"🗂 <b>Заявок на рассмотрение: {requests.Count}</b>",
+            $"🗂 Заявок на рассмотрении: {requests.Count}",
             parseMode: ParseMode.Html,
             cancellationToken: ct);
 

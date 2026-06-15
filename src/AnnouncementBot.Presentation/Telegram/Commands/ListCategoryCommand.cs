@@ -27,11 +27,11 @@ public class ListCategoryCommand : IBotCommand
 
         if (!categories.Any())
         {
-            await bot.SendMessage(message.Chat.Id, "📭 Категорий пока нет.", cancellationToken: ct);
+            await bot.SendMessage(message.Chat.Id, "📭 Категории отсутствуют.", cancellationToken: ct);
             return;
         }
 
-        var text = "<b>📂 Список категорий:</b>\n\n" +
+        var text = "📂 <b>Список категорий:</b>\n\n" +
                    string.Join("\n", categories.Select((c, i) => $"{i + 1}. {c.Name}"));
 
         await bot.SendMessage(

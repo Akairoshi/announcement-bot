@@ -33,7 +33,7 @@ public class ListTemplateCommand : IBotCommand
         {
             await bot.SendMessage(
                 message.Chat.Id,
-                "📭 <b>У вас пока нет шаблонов.</b>\nИспользуйте /add_template чтобы создать.",
+                "📭 Шаблоны отсутствуют.\n\nИспользуйте /add_template для создания.",
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
             return;

@@ -13,10 +13,10 @@ public class AddCategoryCommand : IBotCommand
     private readonly ConversationStateStorage _stateStorage;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public AddCategoryCommand(ConversationStateStorage stateStorage, IServiceScopeFactory scopeFactory)
+    public AddCategoryCommand(ConversationStateStorage stateStorage, IServiceScopeFactory _scopeFactory)
     {
         _stateStorage = stateStorage;
-        _scopeFactory = scopeFactory;
+        this._scopeFactory = _scopeFactory;
     }
 
     public string Command => "/add_category";
@@ -28,8 +28,7 @@ public class AddCategoryCommand : IBotCommand
 
         await bot.SendMessage(
             message.Chat.Id,
-            "📂 <b>Создание категории</b>\n\nВведите название новой категории:\n\n" +
-            "<i>Для отмены введите /cancel</i>",
+            "📂 <b>Создание категории</b>\n\nВведите название новой категории:\n\nДля отмены введите /cancel",
             parseMode: ParseMode.Html,
             cancellationToken: ct);
     }

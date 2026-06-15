@@ -33,7 +33,6 @@ public class FillTemplateState : IConversationState
             .Select(m => m.Groups[1].Value)
             .Distinct()
             .ToList();
-
     }
 
     public async Task HandleAsync(ITelegramBotClient bot, Message message, CancellationToken ct)
@@ -43,13 +42,13 @@ public class FillTemplateState : IConversationState
 
         if (string.IsNullOrWhiteSpace(text) || text.StartsWith('/'))
         {
-            await bot.SendMessage(chatId, "⚠️ Пожалуйста, введите корректное текстовое значение (команды не принимаются):", cancellationToken: ct);
+            await bot.SendMessage(chatId, "⚠️ Введите корректное текстовое значение.\n\nДля отмены введите /cancel", cancellationToken: ct);
             return;
         }
 
         if (_isWaitingForConfirmation)
         {
-            await bot.SendMessage(chatId, "⚠️ Пожалуйста, используйте инлайн-кнопки под сообщением для подтверждения или отмены.", cancellationToken: ct);
+            await bot.SendMessage(chatId, "⚠️ Используйте инлайн-кнопки под сообщением для подтверждения или отмены.", cancellationToken: ct);
             return;
         }
 
@@ -66,8 +65,7 @@ public class FillTemplateState : IConversationState
             var nextPlaceholder = _remainingPlaceholders[0];
             await bot.SendMessage(
                 chatId: chatId,
-                text: $"📝 Введите значение для переменной: <b>{{{nextPlaceholder}}}</b>\n\n" +
-            "<i>Для отмены введите /cancel</i>",
+                text: $"📝 Введите значение для переменной: <b>{{{nextPlaceholder}}}</b>\n\nДля отмены введите /cancel",
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
             return;
@@ -113,13 +111,13 @@ public class FillTemplateState : IConversationState
 
             await bot.SendMessage(
                 chatId: userId,
-                text: $"🚀 <b>Объявление успешно создано и отправлено в очередь доставки!</b>\nID: <code>{announcementId}</code>",
+                text: $"🚀 Объявление успешно создано и отправлено в очередь доставки!\nID: <code>{announcementId}</code>",
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
         }
         else
         {
-            await bot.SendMessage(userId, "❌ Создание объявления отменена.", cancellationToken: ct);
+            await bot.SendMessage(userId, "❌ Создание объявления отменено.", cancellationToken: ct);
         }
     }
 

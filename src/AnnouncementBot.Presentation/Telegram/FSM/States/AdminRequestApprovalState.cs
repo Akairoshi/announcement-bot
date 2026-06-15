@@ -34,7 +34,7 @@ public class AdminRequestApprovalState : IConversationState
 
         if (string.IsNullOrWhiteSpace(categoryName) || categoryName.StartsWith('/'))
         {
-            await bot.SendMessage(message.Chat.Id, "⚠️ Введите корректное название категории:", cancellationToken: ct);
+            await bot.SendMessage(message.Chat.Id, "⚠️ Введите корректное название категории.\n\nДля отмены введите /cancel", cancellationToken: ct);
             return;
         }
 

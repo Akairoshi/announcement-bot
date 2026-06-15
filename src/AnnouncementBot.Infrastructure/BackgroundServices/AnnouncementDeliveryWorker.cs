@@ -30,7 +30,7 @@ public class AnnouncementDeliveryWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Воркер рассылки объявлений запущен.");
+        _logger.LogInformation("[СИСТЕМА] Воркер рассылки объявлений запущен.");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -40,17 +40,17 @@ public class AnnouncementDeliveryWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError("Ошибка в цикле рассылки: {Message}", ex.Message);
+                _logger.LogError("[ОШИБКА] Критический сбой в цикле рассылки | {Message}", ex.Message);
             }
 
-            _logger.LogInformation("Следующий запуск рассылки через {Minutes} мин.", Interval.TotalMinutes);
+            _logger.LogInformation("[СИСТЕМА] Ожидание следующего цикла | Интервал: {Minutes} мин.", Interval.TotalMinutes);
             await Task.Delay(Interval, stoppingToken);
         }
     }
 
     private async Task ProcessDeliveryQueueAsync(CancellationToken ct)
     {
-        _logger.LogInformation("Воркер рассылки запущен в {Time}.", DateTime.UtcNow);
+        _logger.LogInformation("[СИСТЕМА] Запуск обработки очереди рассылки | Время: {Time}", DateTime.UtcNow);
 
         using var scope = _serviceProvider.CreateScope();
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
@@ -59,12 +59,13 @@ public class AnnouncementDeliveryWorker : BackgroundService
 
         if (!pendingDeliveries.Any())
         {
-            _logger.LogInformation("Нет доставок для обработки.");
+            _logger.LogInformation("[СИСТЕМА] Очередь рассылки пуста | Нет доставок для обработки.");
             return;
         }
 
-        _logger.LogInformation("Обработка {Count} доставок.", pendingDeliveries.Count);
+        _logger.LogInformation("[СИСТЕМА] Найдено записей для отправки | Количество: {Count}", pendingDeliveries.Count);
 
+        // Оптимизация: Загружаем из базы только то, что требуется для текущей пачки
         var announcementIds = pendingDeliveries.Select(d => d.AnnouncementId).Distinct().ToList();
         var allAnnouncements = await unitOfWork.Announcements.GetAllAsync(ct);
         var announcementsCache = allAnnouncements
@@ -87,7 +88,7 @@ public class AnnouncementDeliveryWorker : BackgroundService
         {
             if (!announcementsCache.TryGetValue(delivery.AnnouncementId, out var announcement))
             {
-                _logger.LogWarning("Объявление {Id} не найдено, пропускаем.", delivery.AnnouncementId);
+                _logger.LogWarning("[ПРЕДУПРЕЖДЕНИЕ] Объявление не найдено | ID: {Id} | Доставка отменена.", delivery.AnnouncementId);
                 delivery.MarkAsFailed(DeliveryErrorStatus.NotFound);
                 await unitOfWork.DeliveryStatuses.UpdateAsync(delivery, ct);
                 continue;
@@ -107,7 +108,7 @@ public class AnnouncementDeliveryWorker : BackgroundService
 
                 if (_wasNetworkDown)
                 {
-                    _logger.LogInformation("Сетевое соединение восстановлено. Рассылка продолжается.");
+                    _logger.LogInformation("[СИСТЕМА] Сетевое соединение восстановлено | Рассылка возобновлена.");
                     _wasNetworkDown = false;
                 }
 
@@ -128,7 +129,7 @@ public class AnnouncementDeliveryWorker : BackgroundService
                 };
 
                 _logger.LogWarning(
-                    "Telegram ошибка [{Code}] для пользователя {UserId}: {Message}",
+                    "[ПРЕДУПРЕЖДЕНИЕ] API ошибка Telegram | Код: {Code} | Пользователь: {UserId} | Текст: {Message}",
                     apiEx.ErrorCode, delivery.UserId, apiEx.Message);
 
                 delivery.MarkAsFailed(errorStatus);
@@ -136,7 +137,7 @@ public class AnnouncementDeliveryWorker : BackgroundService
             }
             catch (RequestException requestEx)
             {
-                _logger.LogWarning("Сетевая ошибка для пользователя {UserId}: {Message}",
+                _logger.LogError("[СБОЙ СОЕДИНЕНИЯ] Ошибка сети при отправке | Пользователь: {UserId} | Текст: {Message}",
                     delivery.UserId, requestEx.Message);
 
                 hadNetworkErrorInBatch = true;
@@ -145,19 +146,22 @@ public class AnnouncementDeliveryWorker : BackgroundService
             }
             catch (TaskCanceledException)
             {
-                _logger.LogWarning("Таймаут при отправке пользователю {UserId}.", delivery.UserId);
+                _logger.LogError("[СБОЙ СОЕДИНЕНИЯ] Таймаут операции SendMessage | Пользователь: {UserId}", delivery.UserId);
 
                 hadNetworkErrorInBatch = true;
                 delivery.MarkAsFailed(DeliveryErrorStatus.NetworkError);
                 await unitOfWork.DeliveryStatuses.UpdateAsync(delivery, ct);
             }
 
+            // Небольшая задержка между отправками для соблюдения лимитов Telegram API
             await Task.Delay(50, ct);
         }
 
         if (hadNetworkErrorInBatch)
             _wasNetworkDown = true;
 
+        // Фиксируем все изменения статусов в БД за один вызов
         await unitOfWork.SaveChangesAsync(ct);
+        _logger.LogInformation("[СИСТЕМА] Обработка пачки завершена | Изменения сохранены в БД.");
     }
 }

@@ -42,13 +42,13 @@ public class TelegramBotWorker : BackgroundService
 
         var delayInterval = TimeSpan.FromSeconds(10);
 
-        _logger.LogInformation("Запуск проверки и подготовки необходимых ресурсов...");
+        _logger.LogInformation("[ИНИЦИАЛИЗАЦИЯ] Запуск проверки и подготовки необходимых ресурсов...");
 
         while (!cancellationToken.IsCancellationRequested)
         {
             if (!isDbReady)
             {
-                _logger.LogInformation("Проверка подключения к базе данных...");
+                _logger.LogInformation("[БАЗА ДАННЫХ] Проверка подключения к базе данных...");
 
                 using var scope = _serviceProvider.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -57,44 +57,44 @@ public class TelegramBotWorker : BackgroundService
                 {
                     if (await dbContext.Database.CanConnectAsync(cancellationToken))
                     {
-                        _logger.LogInformation("Подключение к базе данных установлено.");
+                        _logger.LogInformation("[БАЗА ДАННЫХ] Подключение к базе данных успешно установлено.");
 
                         await EnsureSuperAdminAsync(scope, cancellationToken);
                         isDbReady = true;
                     }
                     else
                     {
-                        _logger.LogError("База данных недоступна на порту. Проверьте строку подключения или запуск контейнера.");
+                        _logger.LogError("[БАЗА ДАННЫХ] Сбой подключения. База данных недоступна на указанном порту. Проверьте строку подключения или статус контейнера.");
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning("Ошибка при работе с базе данных: {Message}", ex.Message);
+                    _logger.LogWarning("[БАЗА ДАННЫХ] Исключение при проверке доступности: {Message}", ex.Message);
                 }
             }
 
             if (isDbReady && !isTelegramReady)
             {
-                _logger.LogInformation("Проверка соединения с Telegram API...");
+                _logger.LogInformation("[СИСТЕМА] Проверка соединения с Telegram API...");
                 try
                 {
                     var me = await _botClient.GetMe(cancellationToken);
-                    _logger.LogInformation("Соединение с Telegram установлено! Бот: @{Username}", me.Username);
+                    _logger.LogInformation("[СИСТЕМА] Соединение с Telegram установлено. Имя бота: @{Username}", me.Username);
                     isTelegramReady = true;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning("Нет связи с Telegram API: {Message}", ex.Message);
+                    _logger.LogWarning("[СИСТЕМА] Отсутствует связь с Telegram API: {Message}", ex.Message);
                 }
             }
 
             if (isDbReady && isTelegramReady)
             {
-                _logger.LogInformation("Все ресурсы успешно подготовлены. Бот готов к запуску.");
+                _logger.LogInformation("[ИНИЦИАЛИЗАЦИЯ] Все системные ресурсы успешно подготовлены. Бот готов к запуску.");
                 break;
             }
 
-            _logger.LogInformation("Ожидание ресурсов... Следующая проверка через 10 секунд.");
+            _logger.LogInformation("[ИНИЦИАЛИЗАЦИЯ] Ресурсы не готовы. Ожидание повторной проверки через 10 секунд...");
 
             try
             {
@@ -102,7 +102,7 @@ public class TelegramBotWorker : BackgroundService
             }
             catch (OperationCanceledException)
             {
-                _logger.LogWarning("Проверка ресурсов была прервана отменой приложения.");
+                _logger.LogWarning("[ИНИЦИАЛИЗАЦИЯ] Процесс проверки ресурсов был прерван отменой приложения.");
                 _appLifetime.StopApplication();
                 return;
             }
@@ -127,14 +127,14 @@ public class TelegramBotWorker : BackgroundService
             superAdmin.ChangeRole(UserRole.SuperAdmin);
             await unitOfWork.Users.AddAsync(superAdmin, ct);
             await unitOfWork.SaveChangesAsync(ct);
-            _logger.LogInformation("SuperAdmin создан: {Id}", superAdminConfig.UserId);
+            _logger.LogInformation("[СУПЕР-АДМИН] Учетная запись SuperAdmin успешно создана. ID: {Id}", superAdminConfig.UserId);
         }
         else if (user.Role != UserRole.SuperAdmin)
         {
             user.ChangeRole(UserRole.SuperAdmin);
             await unitOfWork.Users.UpdateAsync(user, ct);
             await unitOfWork.SaveChangesAsync(ct);
-            _logger.LogInformation("SuperAdmin роль восстановлена: {Id}", superAdminConfig.UserId);
+            _logger.LogInformation("[СУПЕР-АДМИН] Роль SuperAdmin для пользователя успешно восстановлена. ID: {Id}", superAdminConfig.UserId);
         }
     }
 
@@ -146,7 +146,7 @@ public class TelegramBotWorker : BackgroundService
             DropPendingUpdates = true
         };
 
-        _logger.LogInformation("Бот запущен и слушает обновления...");
+        _logger.LogInformation("[РАБОТА БОТА] Служба Long Polling успешно запущена. Ожидание обновлений...");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -163,7 +163,7 @@ public class TelegramBotWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка polling — переподключение через 5 секунд...");
+                _logger.LogError(ex, "[ОШИБКА ПОЛЛИНГА] Критический сбой цикла Long Polling. Инициализация повторного подключения через 5 секунд...");
                 await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
         }

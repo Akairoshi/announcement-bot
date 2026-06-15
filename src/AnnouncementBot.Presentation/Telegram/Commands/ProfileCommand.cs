@@ -31,7 +31,7 @@ public class ProfileCommand : IBotCommand
         var user = await unitOfWork.Users.GetByIdAsync(userId, ct);
         if (user is null) return;
 
-        ReplyKeyboardMarkup mainMenuKeyboard = ReplyKeyboards.GetMainKeyboard(user!.Role);
+        ReplyKeyboardMarkup mainMenuKeyboard = ReplyKeyboards.GetMainKeyboard(user.Role);
         string roleName = user.Role switch
         {
             UserRole.User => "Пользователь 👤",
@@ -40,65 +40,64 @@ public class ProfileCommand : IBotCommand
             _ => "Неизвестно"
         };
 
-
         string plate;
 
         switch (user.Role)
         {
             case UserRole.SuperAdmin:
-            {
-                var allCategories = await unitOfWork.Categories.GetAllAsync(ct);
+                {
+                    var allCategories = await unitOfWork.Categories.GetAllAsync(ct);
 
-                var subscriptions = await unitOfWork.Subscriptions.GetByUserIdAsync(userId, ct);
-                var subscribedIds = subscriptions.Select(s => s.CategoryId).ToHashSet();
-                var subscribedCategories = allCategories.Where(c => subscribedIds.Contains(c.Id)).ToList();
+                    var subscriptions = await unitOfWork.Subscriptions.GetByUserIdAsync(userId, ct);
+                    var subscribedIds = subscriptions.Select(s => s.CategoryId).ToHashSet();
+                    var subscribedCategories = allCategories.Where(c => subscribedIds.Contains(c.Id)).ToList();
 
-                string subscribeLabel = "<b>📋 Мои подписки:</b>";
-                string subscribeBlock = subscribedCategories.Any()
-                    ? string.Join("\n", subscribedCategories.Select(c => $"  - {c.Name}"))
-                    : "  <i>Нет активных подписок</i>";
-                plate = subscribeLabel + "\n" + subscribeBlock;
-                break;
-            }
+                    string subscribeLabel = "📋 <b>Мои подписки:</b>";
+                    string subscribeBlock = subscribedCategories.Any()
+                        ? string.Join("\n", subscribedCategories.Select(c => $"  - {c.Name}"))
+                        : "  Активные подписки отсутствуют";
+                    plate = subscribeLabel + "\n" + subscribeBlock;
+                    break;
+                }
             case UserRole.Admin:
-            {
-                var accesses = await unitOfWork.AdminCategoryAccesses.GetByAdminIdAsync(userId, ct);
-                var categoryIds = accesses.Select(a => a.CategoryId).ToHashSet();
-                var allCategories = await unitOfWork.Categories.GetAllAsync(ct);
-                var adminCategories = allCategories.Where(c => categoryIds.Contains(c.Id)).ToList();
+                {
+                    var accesses = await unitOfWork.AdminCategoryAccesses.GetByAdminIdAsync(userId, ct);
+                    var categoryIds = accesses.Select(a => a.CategoryId).ToHashSet();
+                    var allCategories = await unitOfWork.Categories.GetAllAsync(ct);
+                    var adminCategories = allCategories.Where(c => categoryIds.Contains(c.Id)).ToList();
 
-                string categoryLabel = "<b>📂 Моя категория:</b>";
-                string categoryBlock = adminCategories.Any()
-                    ? string.Join("\n", adminCategories.Select(c => $"  - {c.Name}"))
-                    : "  <i>Нет назначенных категорий</i>";
-                var subscriptions = await unitOfWork.Subscriptions.GetByUserIdAsync(userId, ct);
-                var subscribedIds = subscriptions.Select(s => s.CategoryId).ToHashSet();
-                var subscribedCategories = allCategories.Where(c => subscribedIds.Contains(c.Id)).ToList();
+                    string categoryLabel = "📂 <b>Мои категории:</b>";
+                    string categoryBlock = adminCategories.Any()
+                        ? string.Join("\n", adminCategories.Select(c => $"  - {c.Name}"))
+                        : "  Назначенные категории отсутствуют";
+                    var subscriptions = await unitOfWork.Subscriptions.GetByUserIdAsync(userId, ct);
+                    var subscribedIds = subscriptions.Select(s => s.CategoryId).ToHashSet();
+                    var subscribedCategories = allCategories.Where(c => subscribedIds.Contains(c.Id)).ToList();
 
-                string subscribeLabel = "<b>📋 Мои подписки:</b>";
-                string subscribeBlock = subscribedCategories.Any()
-                    ? string.Join("\n", subscribedCategories.Select(c => $"  - {c.Name}"))
-                    : "  <i>Нет активных подписок</i>";
-                plate = categoryLabel + "\n" + categoryBlock + "\n\n" + subscribeLabel + "\n" + subscribeBlock;
-                break;
-            }
+                    string subscribeLabel = "📋 <b>Мои подписки:</b>";
+                    string subscribeBlock = subscribedCategories.Any()
+                        ? string.Join("\n", subscribedCategories.Select(c => $"  - {c.Name}"))
+                        : "  Активные подписки отсутствуют";
+                    plate = categoryLabel + "\n" + categoryBlock + "\n\n" + subscribeLabel + "\n" + subscribeBlock;
+                    break;
+                }
             default:
-            {
-                var subscriptions = await unitOfWork.Subscriptions.GetByUserIdAsync(userId, ct);
-                var subscribedIds = subscriptions.Select(s => s.CategoryId).ToHashSet();
-                var allCategories = await unitOfWork.Categories.GetAllAsync(ct);
-                var subscribedCategories = allCategories.Where(c => subscribedIds.Contains(c.Id)).ToList();
+                {
+                    var subscriptions = await unitOfWork.Subscriptions.GetByUserIdAsync(userId, ct);
+                    var subscribedIds = subscriptions.Select(s => s.CategoryId).ToHashSet();
+                    var allCategories = await unitOfWork.Categories.GetAllAsync(ct);
+                    var subscribedCategories = allCategories.Where(c => subscribedIds.Contains(c.Id)).ToList();
 
-                string categoryLabel = "<b>📋 Мои подписки:</b>";
-                string categoryBlock = subscribedCategories.Any()
-                    ? string.Join("\n", subscribedCategories.Select(c => $"  - {c.Name}"))
-                    : "  <i>Нет активных подписок</i>";
-                plate = categoryLabel + "\n" + categoryBlock;
-                break;
-            }
+                    string categoryLabel = "📋 <b>Мои подписки:</b>";
+                    string categoryBlock = subscribedCategories.Any()
+                        ? string.Join("\n", subscribedCategories.Select(c => $"  - {c.Name}"))
+                        : "  Активные подписки отсутствуют";
+                    plate = categoryLabel + "\n" + categoryBlock;
+                    break;
+                }
         }
 
-        var response = $"<b>👤 Профиль пользователя</b>\n\n" +
+        var response = $"👤 <b>Профиль пользователя</b>\n\n" +
                        $"<b>ID:</b> <code>{user.Id}</code>\n" +
                        $"<b>Аккаунт:</b> @{user.UserName ?? "отсутствует"}\n" +
                        $"<b>Роль:</b> {roleName}\n\n" +

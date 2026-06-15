@@ -28,7 +28,7 @@ public class RemoveCategoryCommand : IBotCommand
 
         if (!categories.Any())
         {
-            await bot.SendMessage(message.Chat.Id, "📭 Категорий нет.", cancellationToken: ct);
+            await bot.SendMessage(message.Chat.Id, "📭 Категории отсутствуют.", cancellationToken: ct);
             return;
         }
 
@@ -38,8 +38,7 @@ public class RemoveCategoryCommand : IBotCommand
 
         await bot.SendMessage(
             message.Chat.Id,
-            "🗑 <b>Выберите категорию для удаления:</b>\n\n" +
-            "<i>Для отмены введите /cancel</i>",
+            "🗑 <b>Выберите категорию для удаления:</b>\n\nДля отмены введите /cancel",
             parseMode: ParseMode.Html,
             replyMarkup: new InlineKeyboardMarkup(buttons),
             cancellationToken: ct);

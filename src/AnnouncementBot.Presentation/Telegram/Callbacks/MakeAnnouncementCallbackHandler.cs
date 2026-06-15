@@ -54,7 +54,7 @@ public class MakeAnnouncementCallbackHandler : ICallbackHandler
             await bot.EditMessageText(
                 chatId: chatId,
                 messageId: messageId,
-                text: "📢 <b>Создание объявления</b>\n\nШаг 2: Выберите шаблон или продолжите без него:",
+                text: "📢 <b>Создание объявления</b>\n\nВыберите шаблон или продолжите без него:\n\nДля отмены введите /cancel",
                 parseMode: ParseMode.Html,
                 replyMarkup: new InlineKeyboardMarkup(buttons),
                 cancellationToken: ct);
@@ -66,7 +66,7 @@ public class MakeAnnouncementCallbackHandler : ICallbackHandler
         {
             if (_stateStorage.Get(userId) is not AnnouncementCategorySelectedState categoryState)
             {
-                await bot.SendMessage(chatId, "❌ Сессия истекла. Начните заново через /make_announcement.", cancellationToken: ct);
+                await bot.SendMessage(chatId, "❌ Сессия истекла. Начните создание заново через /make_announcement.", cancellationToken: ct);
                 return;
             }
 
@@ -98,7 +98,7 @@ public class MakeAnnouncementCallbackHandler : ICallbackHandler
             await bot.EditMessageReplyMarkup(chatId, messageId, replyMarkup: null, cancellationToken: ct);
             await bot.SendMessage(
                 chatId: chatId,
-                text: $"<b>Текст шаблона:</b>\n{templateText}",
+                text: $"📝 <b>Текст шаблона:</b>\n{templateText}",
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
             await fillState.AdvanceDialogueAsync(bot, chatId, userId, ct);

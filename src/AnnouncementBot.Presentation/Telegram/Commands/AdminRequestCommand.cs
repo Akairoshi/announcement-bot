@@ -38,7 +38,7 @@ public class AdminRequestCommand : IBotCommand
             case UserRole.SuperAdmin:
                 await bot.SendMessage(
                     message.Chat.Id,
-                    "ℹ️ Вы уже являетесь Супер Администратором.",
+                    "👑 Вы являетесь Супер Администратором.",
                     cancellationToken: ct);
                 return;
 
@@ -48,9 +48,7 @@ public class AdminRequestCommand : IBotCommand
 
                 await bot.SendMessage(
                     message.Chat.Id,
-                    "🔄 <b>Переназначение прав администратора</b>\n\n" +
-                    "Введите ID или @username пользователя, которому хотите передать свою роль:\n\n" +
-                    "<i>Для отмены введите /cancel</i>",
+                    "🔄 <b>Переназначение прав администратора</b>\n\nВведите ID или @username пользователя, которому хотите передать роль:\n\nДля отмены введите /cancel",
                     parseMode: ParseMode.Html,
                     cancellationToken: ct);
                 return;
@@ -61,9 +59,7 @@ public class AdminRequestCommand : IBotCommand
 
                 await bot.SendMessage(
                     message.Chat.Id,
-                    "📝 <b>Заявка на права Администратора</b>\n\n" +
-                    "Опишите причину, почему вам необходим доступ к созданию объявлений:\n\n" +
-                    "<i>Для отмены введите /cancel</i>",
+                    "📝 <b>Заявка на права Администратора</b>\n\nОпишите причину, почему вам необходим доступ к созданию объявлений:\n\nДля отмены введите /cancel",
                     parseMode: ParseMode.Html,
                     cancellationToken: ct);
                 return;

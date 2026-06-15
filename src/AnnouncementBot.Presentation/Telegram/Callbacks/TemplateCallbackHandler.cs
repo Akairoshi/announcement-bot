@@ -46,7 +46,7 @@ public class TemplateCallbackHandler : ICallbackHandler
 
             await bot.SendMessage(
                 chatId,
-                "✏️ Введите новое название шаблона:\n\n<i>Для отмены введите /cancel</i>",
+                "📝 <b>Редактирование шаблона</b>\n\nВведите новое название шаблона:\n\nДля отмены введите /cancel",
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
 
@@ -100,7 +100,7 @@ public class TemplateCallbackHandler : ICallbackHandler
             try
             {
                 await mediator.Send(new RemoveTemplateCommand(templateId, userId), ct);
-                await bot.SendMessage(chatId, "✅ Шаблон удалён.", cancellationToken: ct);
+                await bot.SendMessage(chatId, "✅ Шаблон удален.", cancellationToken: ct);
             }
             catch (Exception ex)
             {

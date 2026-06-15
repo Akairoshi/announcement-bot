@@ -31,7 +31,7 @@ public class AddTemplateState : IConversationState
 
         if (string.IsNullOrWhiteSpace(input) || input.StartsWith('/'))
         {
-            await bot.SendMessage(message.Chat.Id, "⚠️ Введите корректное текстовое значение:", cancellationToken: ct);
+            await bot.SendMessage(message.Chat.Id, "⚠️ Введите корректное текстовое значение.\n\nДля отмены введите /cancel", cancellationToken: ct);
             return;
         }
 
@@ -42,7 +42,7 @@ public class AddTemplateState : IConversationState
 
             await bot.SendMessage(
                 message.Chat.Id,
-                $"📝 Название: <b>{_name}</b>\n\nТеперь введите текст шаблона.\nДля переменных используйте фигурные скобки: <code>{{Имя}}</code>, <code>{{Дата}}</code>",
+                $"📝 Название: <b>{_name}</b>\n\nТеперь введите текст шаблона.\nДля переменных используйте фигурные скобки: <code>{{Имя}}</code>, <code>{{Дата}}</code>\n\nДля отмены введите /cancel",
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
 

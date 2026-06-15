@@ -25,7 +25,7 @@ public class SubscribeCallbackHandler : ICallbackHandler
         var parts = callbackQuery.Data!.Split(':');
         if (parts.Length < 2 || !Guid.TryParse(parts[1], out var categoryId))
         {
-            await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Ошибка данных", cancellationToken: ct);
+            await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Данные некорректны.", cancellationToken: ct);
             return;
         }
 
@@ -35,13 +35,10 @@ public class SubscribeCallbackHandler : ICallbackHandler
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-        // Переключаем подписку в БД через твой MediatR-хендлер
         await mediator.Send(new ToggleSubscriptionCommand(userId, categoryId), ct);
 
-        // Гасим часики загрузки на кнопке
         await bot.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
 
-        // Пересобираем клавиатуру с обновленным статусом для этого сообщения
         var categories = await unitOfWork.Categories.GetAllAsync(ct);
         var buttons = new List<InlineKeyboardButton[]>();
 
@@ -54,7 +51,6 @@ public class SubscribeCallbackHandler : ICallbackHandler
             buttons.Add(new[] { InlineKeyboardButton.WithCallbackData(buttonText, $"subscribe:{c.Id}") });
         }
 
-        // Обновляем кнопки в текущем сообщении (переключаем галочку на лету)
         await bot.EditMessageReplyMarkup(
             chatId: callbackQuery.Message!.Chat.Id,
             messageId: callbackQuery.Message.MessageId,

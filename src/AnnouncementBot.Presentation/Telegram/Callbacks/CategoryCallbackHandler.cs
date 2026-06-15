@@ -46,7 +46,7 @@ public class CategoryCallbackHandler : ICallbackHandler
 
             await bot.SendMessage(
                 chatId,
-                "✏️ Введите новое название категории:\n\n<i>Для отмены введите /cancel</i>",
+                "📂 <b>Редактирование категории</b>\n\nВведите новое название категории:\n\nДля отмены введите /cancel",
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
 
@@ -72,8 +72,8 @@ public class CategoryCallbackHandler : ICallbackHandler
             var subscriberCount = subscribers.Count;
 
             var subscriberLine = subscriberCount > 0
-                ? $"\n👥 Подписчиков: <b>{subscriberCount}</b> — все получат уведомление об отписке."
-                : "\n👥 Подписчиков нет.";
+                ? $"\n👥 Подписчиков: {subscriberCount} — они получат уведомление об автоматической отписке."
+                : "\n👥 Подписчики отсутствуют.";
 
             var keyboard = new InlineKeyboardMarkup(new[]
             {
@@ -87,7 +87,7 @@ public class CategoryCallbackHandler : ICallbackHandler
             await bot.EditMessageText(
                 chatId,
                 messageId,
-                $"🗑 Удалить категорию <b>\"{category.Name}\"</b>?{subscriberLine}\n\n⚠️ Объявления категории останутся, но потеряют привязку.",
+                $"🗑 Удалить категорию <b>\"{category.Name}\"</b>?{subscriberLine}\n\n⚠️ Объявления этой категории потеряют к ней привязку.",
                 parseMode: ParseMode.Html,
                 replyMarkup: keyboard,
                 cancellationToken: ct);
@@ -105,8 +105,6 @@ public class CategoryCallbackHandler : ICallbackHandler
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            // Получаем подписчиков и имя категории ДО удаления —
-            // после SaveChanges подписки каскадно удалятся.
             var category = await unitOfWork.Categories.GetByIdAsync(categoryId, ct);
             if (category is null)
             {
@@ -128,20 +126,19 @@ public class CategoryCallbackHandler : ICallbackHandler
                     parseMode: ParseMode.Html,
                     cancellationToken: ct);
 
-                // Рассылаем уведомления подписчикам параллельно, ошибки не роняют основной поток
                 foreach (var subscriberId in subscriberIds)
                 {
                     try
                     {
                         await bot.SendMessage(
                             chatId: subscriberId,
-                            text: $"ℹ️ Категория <b>\"{categoryName}\"</b>, на которую вы были подписаны, была удалена.\n\nВы автоматически отписаны от неё.",
+                            text: $"ℹ️ Категория <b>\"{categoryName}\"</b> была удалена. Вы автоматически отписаны.",
                             parseMode: ParseMode.Html,
                             cancellationToken: ct);
                     }
                     catch
                     {
-                        // Пользователь мог заблокировать бота — пропускаем молча
+                        // Игнорируем ошибки доставки (например, бот заблокирован)
                     }
                 }
             }

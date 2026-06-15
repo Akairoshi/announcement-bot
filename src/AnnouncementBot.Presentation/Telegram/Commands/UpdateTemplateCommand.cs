@@ -30,7 +30,7 @@ public class UpdateTemplateCommand : IBotCommand
 
         if (!templates.Any())
         {
-            await bot.SendMessage(message.Chat.Id, "📭 У вас нет шаблонов.", cancellationToken: ct);
+            await bot.SendMessage(message.Chat.Id, "📭 Шаблоны отсутствуют.", cancellationToken: ct);
             return;
         }
 
@@ -40,8 +40,7 @@ public class UpdateTemplateCommand : IBotCommand
 
         await bot.SendMessage(
             message.Chat.Id,
-            "📝 <b>Выберите шаблон для редактирования:</b>\n\n" +
-            "<i>Для отмены введите /cancel</i>",
+            "📝 <b>Выберите шаблон для изменения:</b>\n\nДля отмены введите /cancel",
             parseMode: ParseMode.Html,
             replyMarkup: new InlineKeyboardMarkup(buttons),
             cancellationToken: ct);

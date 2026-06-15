@@ -46,7 +46,7 @@ public class MakeAnnouncementCommand : IBotCommand
 
         if (!categories.Any())
         {
-            await bot.SendMessage(message.Chat.Id, "❌ У вас нет доступных категорий.", cancellationToken: ct);
+            await bot.SendMessage(message.Chat.Id, "❌ Доступные категории отсутствуют.", cancellationToken: ct);
             return;
         }
 
@@ -54,11 +54,13 @@ public class MakeAnnouncementCommand : IBotCommand
             .Select(c => new[] { InlineKeyboardButton.WithCallbackData($"📁 {c.Name}", $"ann_cat:{c.Id}") })
             .ToList();
 
+        var inlineKeyboard = new InlineKeyboardMarkup(buttons);
+
         await bot.SendMessage(
             chatId: message.Chat.Id,
-            text: "📢 <b>Создание объявления</b>\n\nШаг 1: Выберите категорию:\n\n<i>Для отмены введите /cancel</i>",
+            text: "📢 <b>Создание объявления</b>\n\nВыберите категорию:\n\nДля отмены введите /cancel",
             parseMode: ParseMode.Html,
-            replyMarkup: new InlineKeyboardMarkup(buttons),
+            replyMarkup: inlineKeyboard,
             cancellationToken: ct);
     }
 }

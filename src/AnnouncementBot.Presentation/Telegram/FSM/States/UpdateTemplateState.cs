@@ -37,7 +37,7 @@ public class UpdateTemplateState : IConversationState
 
         if (string.IsNullOrWhiteSpace(input) || input.StartsWith('/'))
         {
-            await bot.SendMessage(message.Chat.Id, "⚠️ Введите корректное текстовое значение:", cancellationToken: ct);
+            await bot.SendMessage(message.Chat.Id, "⚠️ Введите корректное текстовое значение.\n\nДля отмены введите /cancel", cancellationToken: ct);
             return;
         }
 
@@ -48,7 +48,7 @@ public class UpdateTemplateState : IConversationState
 
             await bot.SendMessage(
                 message.Chat.Id,
-                $"📝 Новое название: <b>{_newName}</b>\n\nТеперь введите новый текст шаблона:",
+                $"📝 Новое название: <b>{_newName}</b>\n\nТеперь введите новый текст шаблона:\n\nДля отмены введите /cancel",
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
 

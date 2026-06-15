@@ -22,7 +22,7 @@ public class AnnouncementCleanerWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Воркер очистки объявлений запущен.");
+        _logger.LogInformation("[СИСТЕМА] Воркер очистки объявлений запущен.");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -32,7 +32,7 @@ public class AnnouncementCleanerWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка в цикле очистки объявлений.");
+                _logger.LogError(ex, "[ОШИБКА] Сбой в цикле очистки объявлений.");
             }
 
             await Task.Delay(Interval, stoppingToken);
@@ -49,13 +49,13 @@ public class AnnouncementCleanerWorker : BackgroundService
 
         if (!old.Any())
         {
-            _logger.LogInformation("Устаревших объявлений не найдено.");
+            _logger.LogInformation("[СИСТЕМА] Очистка объявлений | Устаревших записей не найдено.");
             return;
         }
 
         await unitOfWork.Announcements.DeleteRangeAsync(old, ct);
         await unitOfWork.SaveChangesAsync(ct);
 
-        _logger.LogInformation("Удалено {Count} объявлений старше {Days} дней.", old.Count, RetentionDays);
+        _logger.LogInformation("[СИСТЕМА] Очистка объявлений | Удалено {Count} объявлений старше {Days} дней.", old.Count, RetentionDays);
     }
 }

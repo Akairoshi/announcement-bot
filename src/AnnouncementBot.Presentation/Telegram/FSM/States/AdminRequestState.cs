@@ -41,7 +41,7 @@ public class AdminRequestState : IConversationState
 
         if (string.IsNullOrWhiteSpace(input) || input.StartsWith('/'))
         {
-            await bot.SendMessage(message.Chat.Id, "⚠️ Введите корректное текстовое значение:", cancellationToken: ct);
+            await bot.SendMessage(message.Chat.Id, "⚠️ Введите корректное текстовое значение.\n\nДля отмены введите /cancel", cancellationToken: ct);
             return;
         }
 
@@ -68,25 +68,25 @@ public class AdminRequestState : IConversationState
 
         if (targetUser is null)
         {
-            await bot.SendMessage(chatId, "❌ Пользователь не найден. Введите корректный ID или @username:", cancellationToken: ct);
+            await bot.SendMessage(chatId, "❌ Пользователь не найден. Введите корректный ID или @username:\n\nДля отмены введите /cancel", cancellationToken: ct);
             return;
         }
 
         if (targetUser.Id == _userId)
         {
-            await bot.SendMessage(chatId, "❌ Нельзя передать роль самому себе. Введите другого пользователя:", cancellationToken: ct);
+            await bot.SendMessage(chatId, "❌ Нельзя передать роль самому себе. Введите другого пользователя:\n\nДля отмены введите /cancel", cancellationToken: ct);
             return;
         }
 
         if (targetUser.Role == UserRole.SuperAdmin)
         {
-            await bot.SendMessage(chatId, "❌ Нельзя указать Супер Администратора в качестве цели. Введите другого пользователя:", cancellationToken: ct);
+            await bot.SendMessage(chatId, "❌ Нельзя указать Супер Администратора в качестве цели. Введите другого пользователя:\n\nДля отмены введите /cancel", cancellationToken: ct);
             return;
         }
 
         if (targetUser.Role == UserRole.Admin)
         {
-            await bot.SendMessage(chatId, "❌ Этот пользователь уже является администратором. Введите другого пользователя:", cancellationToken: ct);
+            await bot.SendMessage(chatId, "❌ Этот пользователь уже является администратором. Введите другого пользователя:\n\nДля отмены введите /cancel", cancellationToken: ct);
             return;
         }
 
@@ -97,7 +97,7 @@ public class AdminRequestState : IConversationState
 
         await bot.SendMessage(
             chatId,
-            $"👤 Целевой пользователь: <b>{label}</b>\n\nТеперь введите причину переназначения:",
+            $"👤 Целевой пользователь: <b>{label}</b>\n\nТеперь введите причину переназначения:\n\nДля отмены введите /cancel",
             parseMode: ParseMode.Html,
             cancellationToken: ct);
     }
@@ -119,7 +119,7 @@ public class AdminRequestState : IConversationState
 
             await bot.SendMessage(
                 chatId,
-                "✅ <b>Заявка отправлена.</b> Супер-администратор рассмотрит её в ближайшее время.",
+                "✅ Заявка отправлена. Супер-администратор рассмотрит её в ближайшее время.",
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
         }

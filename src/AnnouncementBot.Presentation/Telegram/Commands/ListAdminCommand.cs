@@ -28,7 +28,7 @@ public class ListAdminCommand : IBotCommand
 
         if (!admins.Any())
         {
-            await bot.SendMessage(message.Chat.Id, "📭 Администраторов пока нет.", cancellationToken: ct);
+            await bot.SendMessage(message.Chat.Id, "📭 Администраторы отсутствуют.", cancellationToken: ct);
             return;
         }
 
@@ -39,7 +39,7 @@ public class ListAdminCommand : IBotCommand
             return $"{i + 1}. {username}{role}";
         });
 
-        var text = "<b>⚙️ Список администраторов:</b>\n\n" + string.Join("\n", lines);
+        var text = "⚙️ <b>Список администраторов:</b>\n\n" + string.Join("\n", lines);
 
         await bot.SendMessage(
             message.Chat.Id,

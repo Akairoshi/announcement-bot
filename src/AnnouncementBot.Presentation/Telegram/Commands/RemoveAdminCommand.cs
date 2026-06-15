@@ -30,7 +30,7 @@ public class RemoveAdminCommand : IBotCommand
 
         if (!regularAdmins.Any())
         {
-            await bot.SendMessage(message.Chat.Id, "📭 Администраторов нет.", cancellationToken: ct);
+            await bot.SendMessage(message.Chat.Id, "📭 Администраторы отсутствуют.", cancellationToken: ct);
             return;
         }
 
@@ -44,8 +44,7 @@ public class RemoveAdminCommand : IBotCommand
 
         await bot.SendMessage(
             message.Chat.Id,
-            "⚙️ <b>Выберите администратора для удаления:</b>\n\n" +
-            "<i>Для отмены введите /cancel</i>",
+            "⚙️ <b>Выберите администратора для удаления:</b>\n\nДля отмены введите /cancel",
             parseMode: ParseMode.Html,
             replyMarkup: new InlineKeyboardMarkup(buttons),
             cancellationToken: ct);

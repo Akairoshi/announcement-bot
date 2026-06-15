@@ -34,7 +34,7 @@ public class UpdateHandler : IUpdateHandler
     {
         if (_isConnectionDown)
         {
-            _logger.LogInformation("Соединение с Telegram восстановлено.");
+            _logger.LogInformation("[СИСТЕМА] Соединение с Telegram API успешно восстановлено.");
             _isConnectionDown = false;
         }
 
@@ -74,7 +74,7 @@ public class UpdateHandler : IUpdateHandler
         }
         else
         {
-            _logger.LogWarning("Неизвестный тип события: {UpdateType}", update.Type);
+            _logger.LogWarning("[ПРЕДУПРЕЖДЕНИЕ] Получен неизвестный тип события: {UpdateType}", update.Type);
         }
     }
 
@@ -86,7 +86,7 @@ public class UpdateHandler : IUpdateHandler
         CancellationToken ct)
     {
         var userId = message.From!.Id;
-        _logger.LogInformation("[СООБЩЕНИЕ] От ID {UserId}: {Text}", userId, text);
+        _logger.LogInformation("[ВХОДЯЩЕЕ СООБЩЕНИЕ] ID: {UserId} | Текст: {Text}", userId, text);
 
         if (text == "/cancel" || text.StartsWith("/cancel "))
         {
@@ -103,7 +103,7 @@ public class UpdateHandler : IUpdateHandler
 
             await botClient.SendMessage(
                 message.Chat.Id,
-                activeState is not null ? "❌ Действие отменено." : "У вас нет активных действий для отмены.",
+                activeState is not null ? "[ОТМЕНА] Текущее действие успешно прервано." : "[ОТМЕНА] Активные действия в очереди отсутствуют.",
                 cancellationToken: ct);
             return;
         }
@@ -126,7 +126,7 @@ public class UpdateHandler : IUpdateHandler
         {
             await botClient.SendMessage(
                 message.Chat.Id,
-                "Неизвестная команда. Используй /start для начала.",
+                "[ОШИБКА] Неизвестная команда. Используйте /start для инициализации.",
                 cancellationToken: ct);
         }
     }
@@ -137,7 +137,7 @@ public class UpdateHandler : IUpdateHandler
         CancellationToken ct)
     {
         var data = callbackQuery.Data ?? string.Empty;
-        _logger.LogInformation("[КНОПКА] Юзер {UserId} нажал: {Data}", callbackQuery.From.Id, data);
+        _logger.LogInformation("[ИНТЕРАКТИВ] ID: {UserId} | Нажата кнопка: {Data}", callbackQuery.From.Id, data);
 
         await botClient.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: ct);
 
@@ -148,12 +148,12 @@ public class UpdateHandler : IUpdateHandler
         if (handler is not null)
             await handler.HandleAsync(botClient, callbackQuery, ct);
         else
-            _logger.LogWarning("Нет обработчика для callback: {Data}", data);
+            _logger.LogWarning("[ПРЕДУПРЕЖДЕНИЕ] Обработчик для callback-данных не найден: {Data}", data);
     }
 
     public Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken ct)
     {
-        _logger.LogError("Ошибка Long Polling: {Message}", exception.Message);
+        _logger.LogError("[ОШИБКА ПОЛЛИНГА] Long Polling сбой: {Message}", exception.Message);
         return Task.CompletedTask;
     }
 
@@ -162,7 +162,7 @@ public class UpdateHandler : IUpdateHandler
         if (!_isConnectionDown)
         {
             _isConnectionDown = true;
-            _logger.LogError("Соединение с Telegram потеряно: {Message}", exception.Message);
+            _logger.LogError("[СБОЙ СОЕДИНЕНИЯ] Потеряна связь с Telegram API: {Message}", exception.Message);
         }
 
         return Task.CompletedTask;

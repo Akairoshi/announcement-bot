@@ -80,7 +80,7 @@ public class AdminRemoveCallbackHandler : ICallbackHandler
             try
             {
                 await mediator.Send(new ChangeUserRoleCommand(targetId, UserRole.User, superAdminId), ct);
-                await bot.SendMessage(chatId, "✅ Администратор разжалован до пользователя.", cancellationToken: ct);
+                await bot.SendMessage(chatId, "✅ Администратор понижен до роли Пользователь.", cancellationToken: ct);
             }
             catch (Exception ex)
             {

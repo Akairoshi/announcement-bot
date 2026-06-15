@@ -29,7 +29,7 @@ public class StartCommand : IBotCommand
         var user = await unitOfWork.Users.GetByIdAsync(userId, ct);
 
         ReplyKeyboardMarkup mainMenuKeyboard = ReplyKeyboards.GetMainKeyboard(user!.Role);
-        var welcomeText = "👋 Добро пожаловать в Бот объявлений!\n";
+        var welcomeText = "👋 Добро пожаловать в Бот объявлений!";
 
         await bot.SendMessage(
             chatId: message.Chat.Id,

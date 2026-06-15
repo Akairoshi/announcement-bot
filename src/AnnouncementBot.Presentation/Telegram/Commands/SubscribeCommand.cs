@@ -28,19 +28,16 @@ public class SubscribeCommand : IBotCommand
         var categories = await unitOfWork.Categories.GetAllAsync(ct);
         if (!categories.Any())
         {
-            await bot.SendMessage(message.Chat.Id, "📭 Список категорий пуст.", cancellationToken: ct);
+            await bot.SendMessage(message.Chat.Id, "📭 Категории отсутствуют.", cancellationToken: ct);
             return;
         }
 
-        // Рендерим кнопки с динамическими галочками
         var buttons = new List<InlineKeyboardButton[]>();
         foreach (var c in categories)
         {
-            // Проверяем, подписан ли юзер на эту конкретную категорию
             var sub = await unitOfWork.Subscriptions.GetByUserAndCategoryAsync(userId, c.Id, ct);
             var isSubscribed = sub is not null;
 
-            // Если подписан — добавляем галочку, если нет — просто колокольчик
             var buttonText = isSubscribed ? $"✅ {c.Name}" : $"🔔 {c.Name}";
 
             buttons.Add(new[] { InlineKeyboardButton.WithCallbackData(buttonText, $"subscribe:{c.Id}") });
@@ -50,7 +47,7 @@ public class SubscribeCommand : IBotCommand
 
         await bot.SendMessage(
             chatId: message.Chat.Id,
-            text: "📋 Нажмите на категорию, чтобы подписаться или отписаться:",
+            text: "📋 Выберите категорию для управления подпиской:",
             replyMarkup: keyboard,
             cancellationToken: ct);
     }

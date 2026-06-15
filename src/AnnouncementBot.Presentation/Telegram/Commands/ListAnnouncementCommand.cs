@@ -45,27 +45,14 @@ public class ListAnnouncementCommand : IBotCommand
             var accesses = await unitOfWork.AdminCategoryAccesses.GetByAdminIdAsync(userId, ct);
             var categoryIds = accesses.Select(a => a.CategoryId).ToHashSet();
 
-            allCategories = await unitOfWork.Categories.GetAllAsync(ct);
             var allAnnouncements = await unitOfWork.Announcements.GetAllAsync(ct);
             announcements = allAnnouncements.Where(a => a.CategoryId.HasValue && categoryIds.Contains(a.CategoryId.Value)).ToList();
+            allCategories = await unitOfWork.Categories.GetAllAsync(ct);
         }
         else
         {
-            var subscriptions = await unitOfWork.Subscriptions.GetByUserIdAsync(userId, ct);
-            var categoryIds = subscriptions.Select(s => s.CategoryId).ToHashSet();
-
-            if (!categoryIds.Any())
-            {
-                await bot.SendMessage(
-                    message.Chat.Id,
-                    "📭 Вы не подписаны ни на одну категорию. Используйте /subscribe.",
-                    cancellationToken: ct);
-                return;
-            }
-
+            announcements = await unitOfWork.Announcements.GetByAdminIdAsync(userId, ct);
             allCategories = await unitOfWork.Categories.GetAllAsync(ct);
-            var allAnnouncements = await unitOfWork.Announcements.GetAllAsync(ct);
-            announcements = allAnnouncements.Where(a => a.CategoryId.HasValue && categoryIds.Contains(a.CategoryId.Value)).ToList();
         }
 
         var recent = announcements
@@ -77,14 +64,14 @@ public class ListAnnouncementCommand : IBotCommand
         {
             await bot.SendMessage(
                 message.Chat.Id,
-                "📢 Объявлений пока нет.",
+                "📢 Объявления отсутствуют.",
                 cancellationToken: ct);
             return;
         }
 
         var categoryMap = allCategories.ToDictionary(c => c.Id, c => c.Name);
 
-        var responseText = "<b>📬 Последние объявления:</b>\n\n";
+        var responseText = "📬 <b>Последние объявления:</b>\n\n";
         foreach (var ann in recent)
         {
             var categoryName = ann.CategoryId.HasValue && categoryMap.TryGetValue(ann.CategoryId.Value, out var name)
@@ -96,9 +83,9 @@ public class ListAnnouncementCommand : IBotCommand
             var pendingCount = ann.DeliveryStatuses.Count(x => x.Status == DeliverySentStatus.Pending);
 
             responseText +=
-                $"<b>📁</b> {categoryName}\n" +
-                $"<b>📅</b> {ann.CreatedAt:dd.MM.yyyy HH:mm}\n\n" +
-                (showStatistic ? $"<b>📊 Статистика:</b>\n✅ {successCount} | ❌ {failedCount} | ⏳ {pendingCount}\n\n" : string.Empty) +
+                $"📁 {categoryName}\n" +
+                $"📅 {ann.CreatedAt:dd.MM.yyyy HH:mm}\n\n" +
+                (showStatistic ? $"📊 <b>Статистика:</b>\n✅ {successCount} | ❌ {failedCount} | ⏳ {pendingCount}\n\n" : string.Empty) +
                 $"{ann.Text}\n" +
                 $"──────────────\n\n";
         }

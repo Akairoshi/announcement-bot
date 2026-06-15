@@ -33,7 +33,7 @@ public class UpdateCategoryState : IConversationState
 
         if (string.IsNullOrWhiteSpace(newName) || newName.StartsWith('/'))
         {
-            await bot.SendMessage(message.Chat.Id, "⚠️ Введите корректное название:", cancellationToken: ct);
+            await bot.SendMessage(message.Chat.Id, "⚠️ Введите корректное название.\n\nДля отмены введите /cancel", cancellationToken: ct);
             return;
         }
 

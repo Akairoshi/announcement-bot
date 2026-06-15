@@ -32,7 +32,7 @@ public class AdminRequestReviewCallbackHandler : ICallbackHandler
         var parts = callbackQuery.Data!.Split(':');
         if (parts.Length < 3 || !Guid.TryParse(parts[2], out var requestId))
         {
-            await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Некорректные данные.", cancellationToken: ct);
+            await bot.AnswerCallbackQuery(callbackQuery.Id, "❌ Данные некорректны.", cancellationToken: ct);
             return;
         }
 
@@ -67,7 +67,7 @@ public class AdminRequestReviewCallbackHandler : ICallbackHandler
 
                 await bot.SendMessage(
                     adminRequest.RequesterId,
-                    "😔 Ваша заявка на получение прав администратора была <b>отклонена</b>.",
+                    "😔 Ваша заявка на получение прав администратора отклонена.",
                     parseMode: ParseMode.Html,
                     cancellationToken: ct);
             }
@@ -97,13 +97,13 @@ public class AdminRequestReviewCallbackHandler : ICallbackHandler
 
                     await bot.SendMessage(
                         targetId,
-                        "🎉 Вам переданы права <b>Администратора</b>.\nТеперь вы можете создавать объявления. Используйте /start для обновления меню.",
+                        "🎉 Вам переданы права Администратора.\n\nИспользуйте /start для обновления главного меню.",
                         parseMode: ParseMode.Html,
                         cancellationToken: ct);
 
                     await bot.SendMessage(
                         requesterId,
-                        "ℹ️ Ваши права администратора были переданы другому пользователю. Вы понижены до роли User.",
+                        "ℹ️ Права администратора переданы. Ваша роль изменена на Пользователь.",
                         cancellationToken: ct);
                 }
                 catch (Exception ex)
@@ -119,7 +119,7 @@ public class AdminRequestReviewCallbackHandler : ICallbackHandler
 
             await bot.SendMessage(
                 chatId,
-                "📂 Введите название категории для нового администратора\n(можно указать существующую или новую):\n\n<i>Для отмены введите /cancel</i>",
+                "📂 <b>Назначение категории</b>\n\nВведите название категории для нового администратора (существующей или новой):\n\nДля отмены введите /cancel",
                 parseMode: ParseMode.Html,
                 cancellationToken: ct);
         }
