@@ -1,11 +1,10 @@
 # База данных
 
-PostgreSQL. Схема в формате DBML и PDF - database.dbml/pdf.
+PostgreSQL. Схема в формате DBML — `database.dbml`.
 
 ---
 
 ## Таблицы
-
 
 - [Users](#users)
 - [Categories](#categories)
@@ -13,52 +12,52 @@ PostgreSQL. Схема в формате DBML и PDF - database.dbml/pdf.
 - [Subscriptions](#subscriptions)
 - [Templates](#templates)
 - [Announcements](#announcements)
-- [DeliveryStatus](#deliverystatus)
+- [DeliveryStatuses](#deliverystatuses)
 - [AdminRequests](#adminrequests)
-- [AuditLog](#auditlog)
+- [AuditLogs](#auditlogs)
 
 ---
 
 ## Users
 
-Пользователи бота. Создаётся автоматически при первом обращении к боту (`/start`).
+Пользователи бота. Создаётся автоматически при первом обращении (`UserRegistrationMiddleware`).
 
 | Поле | Тип | Nullable | Описание |
 |------|-----|----------|----------|
-| `Id` | bigint | NO | Telegram User ID. Используется как PK — Telegram гарантирует уникальность |
-| `UserName` | varchar | **YES** | Telegram username (`@username`). Может отсутствовать — в Telegram необязателен |
-| `Role` | int | NO | Роль пользователя: `0` = User, `1` = Admin, `2` = Супер Админ |
-| `JoinAt` | timestamp | NO | Дата первого обращения к боту |
+| `Id` | bigint | NO | Telegram User ID — PK, не генерируется БД |
+| `UserName` | varchar(32) | YES | Telegram @username. Обновляется при каждом обращении |
+| `Role` | int | NO | `0` = User, `1` = Admin, `2` = SuperAdmin |
+| `JoinedAt` | timestamp | NO | Дата первой регистрации в боте |
 
-**Примечание:** Основной Супер Админ создаётся при старте приложения на основе `SuperAdmin.TelegramUserId` из конфига. Его роль нельзя изменить через бота.
+**Примечание:** SuperAdmin создаётся при старте приложения на основе `SuperAdmin.UserId` из конфига. Роль SuperAdmin восстанавливается при каждом запуске, если была изменена вне бота.
 
 ---
 
 ## Categories
 
-Категории объявлений. Управляются только Супер Админ'ом.
+Категории объявлений. Управляются только SuperAdmin'ом.
 
 | Поле | Тип | Nullable | Описание |
 |------|-----|----------|----------|
-| `Id` | uuid | NO | Первичный ключ |
-| `Name` | varchar | NO | Название категории. Уникальное |
-| `CreatedById` | bigint | NO | FK → `Users.Id`. Кто создал категорию |
+| `Id` | uuid | NO | PK, генерируется приложением |
+| `Name` | varchar(100) | NO | Название. Уникальный индекс |
+| `CreatedById` | bigint | NO | FK → `Users.Id` (Restrict) |
 | `CreatedAt` | timestamp | NO | Дата создания |
+
+При удалении категории: `AdminCategoryAccess` и `Subscriptions` удаляются каскадно, `Announcements.CategoryId` → `null` (SetNull), подписчики получают уведомление в личку.
 
 ---
 
 ## AdminCategoryAccess
 
-Связь Admin ↔ Category. Определяет к каким категориям имеет доступ конкретный администратор.
+Связь Admin ↔ Category. Определяет, какими категориями управляет администратор.
 
 | Поле | Тип | Nullable | Описание |
 |------|-----|----------|----------|
-| `AdminId` | bigint | NO | FK → `Users.Id` |
-| `CategoryId` | uuid | NO | FK → `Categories.Id` |
+| `AdminId` | bigint | NO | FK → `Users.Id` (Cascade) |
+| `CategoryId` | uuid | NO | FK → `Categories.Id` (Cascade) |
 
-Первичный ключ составной: `(AdminId, CategoryId)`.
-
-Администратор может создавать объявления и просматривать данные только по категориям из этой таблицы.
+PK составной: `(AdminId, CategoryId)`.
 
 ---
 
@@ -68,25 +67,27 @@ PostgreSQL. Схема в формате DBML и PDF - database.dbml/pdf.
 
 | Поле | Тип | Nullable | Описание |
 |------|-----|----------|----------|
-| `UserId` | bigint | NO | FK → `Users.Id` |
-| `CategoryId` | uuid | NO | FK → `Categories.Id` |
+| `UserId` | bigint | NO | FK → `Users.Id` (Cascade) |
+| `CategoryId` | uuid | NO | FK → `Categories.Id` (Cascade) |
 | `SubscribedAt` | timestamp | NO | Дата подписки |
 
-Первичный ключ составной: `(UserId, CategoryId)`. Одна запись = одна активная подписка. При отписке запись удаляется.
+PK составной: `(UserId, CategoryId)`. При отписке запись удаляется. При удалении категории записи удаляются каскадно.
 
 ---
 
 ## Templates
 
-Шаблоны объявлений. Принадлежат конкретному администратору — другие администраторы их не видят.
+Шаблоны объявлений. Принадлежат конкретному администратору — другие их не видят. Поддерживают плейсхолдеры вида `{Переменная}`.
 
 | Поле | Тип | Nullable | Описание |
 |------|-----|----------|----------|
-| `Id` | uuid | NO | Первичный ключ |
-| `Name` | varchar | NO | Название шаблона |
-| `Text` | text | NO | Текст шаблона |
-| `CreatedById` | bigint | NO | FK → `Users.Id`. Admin-владелец шаблона |
+| `Id` | uuid | NO | PK |
+| `Name` | varchar(100) | NO | Название шаблона |
+| `Text` | text | NO | Текст с плейсхолдерами |
+| `CreatedById` | bigint | NO | FK → `Users.Id` (Restrict) |
 | `CreatedAt` | timestamp | NO | Дата создания |
+
+При удалении шаблона: `Announcements.TemplateId` → `null` (SetNull).
 
 ---
 
@@ -96,66 +97,67 @@ PostgreSQL. Схема в формате DBML и PDF - database.dbml/pdf.
 
 | Поле | Тип | Nullable | Описание |
 |------|-----|----------|----------|
-| `Id` | uuid | NO | Первичный ключ |
-| `Text` | text | NO | Текст объявления |
-| `CategoryId` | uuid | NO | FK → `Categories.Id`. Категория объявления |
-| `TemplateId` | uuid | **YES** | FK → `Templates.Id`. Шаблон, если использовался. Иначе `null` |
-| `CreatedById` | bigint | NO | FK → `Users.Id`. Кто создал объявление |
+| `Id` | uuid | NO | PK |
+| `Text` | text | NO | Итоговый текст объявления (плейсхолдеры уже заполнены) |
+| `CategoryId` | uuid | **YES** | FK → `Categories.Id` (SetNull). `null` если категория удалена |
+| `TemplateId` | uuid | **YES** | FK → `Templates.Id` (SetNull). `null` если без шаблона или шаблон удалён |
+| `CreatedById` | bigint | NO | FK → `Users.Id` (Restrict) |
 | `CreatedAt` | timestamp | NO | Дата создания |
 
-**Жизненный цикл:** записи автоматически удаляются через 30 дней через `CleanerService`. При удалении каскадно удаляются связанные записи в `DeliveryStatus`.
+**Жизненный цикл:** `AnnouncementCleanerWorker` удаляет записи старше 30 дней. `DeliveryStatuses` удаляются каскадно.
 
 ---
 
-## DeliveryStatus
+## DeliveryStatuses
 
-Статус доставки объявления каждому подписчику. Одна запись = одна попытка доставить объявление конкретному пользователю.
+Статус доставки конкретного объявления конкретному пользователю. Одна запись = одна очередь на доставку.
 
 | Поле | Тип | Nullable | Описание |
 |------|-----|----------|----------|
-| `Id` | uuid | NO | Первичный ключ |
-| `AnnouncementId` | uuid | NO | FK → `Announcements.Id` |
-| `UserId` | bigint | NO | FK → `Users.Id`. Получатель |
+| `Id` | uuid | NO | PK |
+| `AnnouncementId` | uuid | NO | FK → `Announcements.Id` (Cascade) |
+| `UserId` | bigint | NO | FK → `Users.Id` (Cascade). Получатель |
 | `Status` | int | NO | `0` = Pending, `1` = Sent, `2` = Failed |
-| `RetryCount` | int | NO | Количество попыток отправки. По умолчанию `0` |
-| `LastAttemptAt` | timestamp | **YES** | Время последней попытки. `null` если попыток не было |
-| `SentAt` | timestamp | **YES** | Время успешной отправки. `null` если не доставлено |
+| `ErrorStatus` | int | NO | `0` = None, `-1` = NetworkError, `400/401/403/404/429/500` = HTTP-коды Telegram API |
+| `RetryCount` | int | NO | Число попыток отправки. По умолчанию `0` |
+| `LastAttemptAt` | timestamp | YES | Время последней попытки. `null` если попыток не было |
+| `SentAt` | timestamp | YES | Время успешной доставки |
 
-**Retry-логика:** `SenderService` запускается каждые 10 минут, выбирает записи со статусом `Pending` или `Failed` и `RetryCount < 3`, пытается отправить повторно. После 3 неудачных попыток статус остаётся `Failed` — повторов больше не будет.
+**Retry-логика (`AnnouncementDeliveryWorker`):** запускается каждые N минут (из конфига). Выбирает записи со статусом `Pending` или `Failed` и `RetryCount < 3`. `NetworkError` не увеличивает `RetryCount` — повтор при следующем цикле. После 3 неуспешных попыток запись остаётся в `Failed`.
 
 ---
 
 ## AdminRequests
 
-Заявки на назначение или переназначение администратора. Обрабатываются Супер Админ'ом.
+Заявки на назначение или переназначение администратора.
 
 | Поле | Тип | Nullable | Описание |
 |------|-----|----------|----------|
-| `Id` | uuid | NO | Первичный ключ |
-| `RequesterId` | bigint | NO | FK → `Users.Id`. Кто подаёт заявку |
-| `TargetId` | bigint | **YES** | FK → `Users.Id`. На кого направлено. Заполняется только для `Reassignment` |
-| `Type` | int | NO | `0` = Appointment (пользователь хочет стать Admin), `1` = Reassignment (Admin хочет передать роль) |
+| `Id` | uuid | NO | PK |
+| `RequesterId` | bigint | NO | FK → `Users.Id` (Restrict). Кто подаёт заявку |
+| `TargetId` | bigint | YES | FK → `Users.Id` (Restrict). Целевой пользователь (только для Reassignment) |
+| `Type` | int | NO | `0` = Assignment, `1` = Reassignment |
 | `Details` | text | YES | Причина заявки |
 | `Status` | int | NO | `0` = Pending, `1` = Approved, `2` = Rejected |
-| `CreatedAt` | timestamp | NO | Дата подачи заявки |
-| `ReviewedAt` | timestamp | **YES** | Дата рассмотрения. `null` пока не обработана |
-| `ReviewedById` | bigint | **YES** | FK → `Users.Id`. Кто обработал заявку |
+| `CreatedAt` | timestamp | NO | Дата подачи |
+| `ReviewedAt` | timestamp | YES | Дата рассмотрения |
+| `ReviewedById` | bigint | YES | FK → `Users.Id` (Restrict). Кто рассмотрел |
 
 ---
 
-## AuditLog
+## AuditLogs
 
-Журнал действий. Заполняется автоматически через перехват `SaveChanges` в EF Core при любом изменении данных.
+Журнал действий. Заполняется автоматически через `AuditLogBehavior` (MediatR pipeline) для всех команд, реализующих `IAuditableRequest`.
 
 | Поле | Тип | Nullable | Описание |
 |------|-----|----------|----------|
-| `Id` | uuid | NO | Первичный ключ |
-| `UserId` | bigint | NO | FK → `Users.Id`. Кто выполнил действие |
-| `Action` | varchar | NO | Тип действия. Например: `CategoryCreated`, `AdminAppointed`, `AnnouncementSent` |
-| `EntityName` | varchar | NO | Название сущности. Например: `Category`, `Template`, `User` |
-| `EntityId` | varchar | NO | ID изменённой сущности |
-| `Details` | text | YES | Дополнительная информация. Например: старое и новое значение при изменении |
-| `CreatedAt` | timestamp | NO | Дата и время события |
+| `Id` | uuid | NO | PK |
+| `UserId` | bigint | NO | FK → `Users.Id` (Restrict). Инициатор действия |
+| `Action` | varchar(100) | NO | Тип действия: `CategoryCreated`, `CategoryUpdated`, `CategoryDeleted`, `TemplateCreated`, `TemplateUpdated`, `TemplateDeleted`, `AnnouncementCreated`, `AdminAppointed`, `AdminRemoved`, `CategorySubscribed`, `CategoryUnsubscribed`, `UserRegistered` |
+| `EntityName` | varchar(100) | NO | Название сущности: `Category`, `Template`, `Announcement`, `User`, `Subscription`, `AdminRequest` |
+| `EntityId` | varchar(100) | NO | ID изменённой записи |
+| `Details` | text | YES | Дополнительный контекст (например, новое название при переименовании) |
+| `CreatedAt` | timestamp | NO | Время события (UTC) |
 
 ---
 
@@ -165,12 +167,33 @@ PostgreSQL. Схема в формате DBML и PDF - database.dbml/pdf.
 Users ──< AdminCategoryAccess >── Categories
 Users ──< Subscriptions >── Categories
 Users ──< Templates
-Users ──< Announcements >── Categories
-Users ──< DeliveryStatus >── Announcements
+Users ──< Announcements
+Users ──< DeliveryStatuses
 Users ──< AdminRequests (Requester)
 Users ──< AdminRequests (Target, nullable)
 Users ──< AdminRequests (ReviewedBy, nullable)
-Users ──< AuditLog
-Announcements ──< DeliveryStatus
-Templates ──o Announcements
+Users ──< AuditLogs
+Announcements ──< DeliveryStatuses
+Categories ──o Announcements   (nullable, SetNull при удалении категории)
+Templates ──o Announcements    (nullable, SetNull при удалении шаблона)
 ```
+
+---
+
+## OnDelete поведение
+
+| Связь | Поведение |
+|-------|-----------|
+| User → AdminCategoryAccess | Cascade |
+| Category → AdminCategoryAccess | Cascade |
+| User → Subscriptions | Cascade |
+| Category → Subscriptions | Cascade |
+| Category → Announcements (CategoryId) | **SetNull** |
+| Template → Announcements (TemplateId) | SetNull |
+| Announcement → DeliveryStatuses | Cascade |
+| User → DeliveryStatuses | Cascade |
+| User → Categories (CreatedById) | Restrict |
+| User → Templates (CreatedById) | Restrict |
+| User → Announcements (CreatedById) | Restrict |
+| User → AuditLogs | Restrict |
+| User → AdminRequests | Restrict |
